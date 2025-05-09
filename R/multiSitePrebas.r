@@ -12,7 +12,6 @@
 #' @param multiThin
 #' @param multiNthin
 #' @param multiInitClearCut
-#' @param fixAinit = NA,
 #' @param fixBAinitClearcut
 #' @param initCLcutRatio
 #' @param areas
@@ -31,7 +30,6 @@
 #' @param energyCut
 #' @param inDclct
 #' @param inAclct
-#' @param inHclct 
 #' @param yassoRun
 #' @param smoothP0
 #' @param smoothETS
@@ -77,7 +75,6 @@ InitMultiSite <- function(nYearsMS,
                           multiThin = NA,
                           multiNthin = NA,
                           multiInitClearCut = NA, ###A matrix (rows are sites columns are the variables) with initial stand variables after clearcut: H, D, BA, Hc, Ainit. Ainit is the year when the stand reaches measurable size. If NA the default values from initSeedling.def are used Ainit and is automatically computed using air temperature.
-                          fixAinit = 0,
                           fixBAinitClearcut = 1.,  ###if 1 when clearcut occur the species inital biomass is fixed at replanting using the values in initCLcutRatio else at replanting the replanting follows species relBa at last year before clearcut
                           initCLcutRatio = NA,  ###BA ratio per each species/layer (default is the ba ratio at the begginning of the simulations)
                           areas = NA,
@@ -96,7 +93,6 @@ InitMultiSite <- function(nYearsMS,
                           energyCut = 0.,
                           inDclct = NA,
                           inAclct = NA,
-                          inHclct = NA,
                           yassoRun = 0,
                           smoothP0 = 1,
                           smoothETS = 1,
@@ -187,7 +183,7 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   }
   
   if(ingrowth){
-    ingrowthStep <- 25
+    ingrowthStep <- 10
     # nTreeIngrowth <- 10
     nIngrowthLayers <- floor(max(nYearsMS)/ingrowthStep)
     siteInfo[,8] <- siteInfo[,8] + nIngrowthLayers
@@ -234,9 +230,9 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   multiOut <- array(0, dim=c(nSites,(maxYears),nVar,maxNlayers,2),
                     dimnames = list(site=NULL,year=NULL,variable=varNam,layer=layerNam,
                                     status=c("stand","thinned")))
-  multiEnergyWood <- array(0, dim=c(nSites,(maxYears),maxNlayers,2),
+  multiEnergyWood <- array(0, dim=c(nSites,(maxYears),maxNlayers, 17), #assorttest: ,2 -- ,8
                            dimnames = list(site=NULL,year=NULL,layer=layerNam,
-                                           variable=c("volume","biomass")))
+                                           variable=c("v_harvested", "roundw_tot", "sawnwood", "pulpwood", "energywood_roundw", "energywood_tot", "energyw_stump", "stump_stem", "n_harvested", "d_harvested", "h_harvested", "qredfact", "stemwood_taper", "mgmt_type", "dummy1", "dummy2", "dummy3"))) #jhassort
   initClearcut = initSeedling.def
   if (all(is.na(multiInitClearCut))) multiInitClearCut <- matrix(initClearcut,nSites,5,byrow = T)
   # multiInitClearCut <- cbind(multiInitClearCut,0.0008025897)
@@ -263,10 +259,8 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   if (length(energyCut) == 1) energyCut=as.double(rep(energyCut,nSites))
   if (length(inDclct) == 1) inDclct=matrix(inDclct,nSites,allSp)
   if (length(inAclct) == 1) inAclct=matrix(inAclct,nSites,allSp)
-  if (length(inHclct) == 1) inHclct=matrix(inHclct,nSites,allSp)
   if (length(inDclct) == nSites) inDclct=matrix(inDclct,nSites,allSp)
   if (length(inAclct) == nSites) inAclct=matrix(inAclct,nSites,allSp)
-  if (length(inHclct) == nSites) inHclct=matrix(inHclct,nSites,allSp)
   if (length(yassoRun) == 1) yassoRun=as.double(rep(yassoRun,nSites))
   # if (length(PREBASversion) == 1) PREBASversion=as.double(rep(PREBASversion,nSites))
   #
@@ -323,11 +317,8 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
     if(all(is.na(inDclct[i,]))) inDclct[i,] <- 9999999.99
     if(any(!is.na(inAclct[i,]))) inAclct[i,is.na(inAclct[i,])] <- max(inAclct[i,],na.rm=T)
     if(all(is.na(inAclct[i,]))) inAclct[i,] <- 9999999.99
-    if(any(!is.na(inHclct[i,]))) inHclct[i,is.na(inHclct[i,])] <- max(inHclct[i,],na.rm=T)
-    if(all(is.na(inHclct[i,]))) inHclct[i,] <- 999.99
   }
-  clct_pars <- array(c(inDclct,inAclct,inHclct), dim = c(nSites, ncol(pCROBAS),3))
-  
+
   maxThin <- max(multiNthin)
   ###thinning if missing.  To improve
   if(all(is.na(multiThin)) & !ingrowth){
@@ -618,16 +609,6 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   dailyPRELES[,,3] <- NI[climIDs,1:(maxYears*365)] ###fill preles daily output with nestorov index that will be used internalkly in prebas for fire risk calculations
   multiOut[,1,46,1,2] <- SMIt0 #initialize SMI first year
 
-  ###fix initialization year
-  if(!all(fixAinit == 0)){
-    if(length(fixAinit)!=nSites) stop("check fixAinit needs to be a vector of length nSites")
-    siteX_ainit <- which(fixAinit>0) 
-    multiInitClearCut[siteX_ainit,5] <- fixAinit[siteX_ainit]
-    fixAinit[siteX_ainit] <- 1
-    fixAinit[!siteX_ainit] <- 0
-    multiOut[,1,7,1,2] <- fixAinit
-  } 
-  
   multiSiteInit <- list(
     multiOut = multiOut,
     multiEnergyWood = multiEnergyWood,
@@ -664,7 +645,8 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
     defaultThin = defaultThin,
     ClCut = ClCut,
     energyCut = energyCut,
-    clct_pars = clct_pars,
+    inDclct = inDclct,
+    inAclct = inAclct,
     dailyPRELES = dailyPRELES,
     yassoRun = yassoRun,
     smoothP0 = smoothP0,
@@ -886,10 +868,8 @@ multiPrebas <- function(multiSiteInit,
                               oldLayer,
                               multiSiteInit$ECMmod,
                               dist_flag,
-                              multiSiteInit$CO2model,
-                              0,### fixAinit
-                              -777)) ###ingrowth flag
-  
+                              multiSiteInit$CO2model))
+
 ###modify alphar if fertilization is included
 if(!is.null(yearFert)){
   nSites <- multiSiteInit$nSites
@@ -958,7 +938,8 @@ if(!is.null(yearFert)){
                      defaultThin=as.double(multiSiteInit$defaultThin),
                      ClCut=as.double(multiSiteInit$ClCut),
                      energyCut=as.double(multiSiteInit$energyCut),
-                     clct_pars=as.array(multiSiteInit$clct_pars),
+                     inDclct=as.matrix(multiSiteInit$inDclct),
+                     inAclct=as.matrix(multiSiteInit$inAclct),
                      dailyPRELES = as.array(multiSiteInit$dailyPRELES),
                      yassoRun=as.double(multiSiteInit$yassoRun),
                      multiEnergyWood = as.array(multiSiteInit$multiEnergyWood),
@@ -1067,7 +1048,7 @@ regionPrebas <- function(multiSiteInit,
 
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
   if(all(is.na(HarvLim))) HarvLim <- matrix(0.,multiSiteInit$maxYears,2)
-  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),6)
+  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),9) #jhassort added 3 elements (reg thin3, comp cc, comp thin)  compHarv <- c(compHarv,thinFact)
   compHarv <- c(compHarv,thinFact)
   if(ageHarvPrior > 0.){
     sitesCl1 <- which(multiSiteInit$siteInfo[,3]<3.5)
@@ -1195,9 +1176,7 @@ regionPrebas <- function(multiSiteInit,
                               oldLayer,
                               multiSiteInit$ECMmod,
                               dist_flag,
-                              multiSiteInit$CO2model,
-                              0,### fixAinit
-                              -777)) ###ingrowth flag
+                              multiSiteInit$CO2model))
 
 
   prebas <- .Fortran("regionPrebas",
@@ -1238,7 +1217,8 @@ regionPrebas <- function(multiSiteInit,
                      defaultThin=as.double(multiSiteInit$defaultThin),
                      ClCut=as.double(multiSiteInit$ClCut),
                      energyCut=as.double(multiSiteInit$energyCut),
-                     clct_pars=as.matrix(multiSiteInit$clct_pars),
+                     inDclct=as.matrix(multiSiteInit$inDclct),
+                     inAclct=as.matrix(multiSiteInit$inAclct),
                      dailyPRELES = as.array(multiSiteInit$dailyPRELES),
                      yassoRun=as.double(multiSiteInit$yassoRun),
                      multiEnergyWood = as.array(multiSiteInit$multiEnergyWood),
@@ -1366,12 +1346,11 @@ reStartRegionPrebas <- function(multiSiteInit,
                               oldLayer,
                               multiSiteInit$ECMmod,
                               dist_flag,
-                              multiSiteInit$CO2model,
-                              0,### fixAinit
-                              -777)) ###ingrowth flag
+                              multiSiteInit$CO2model))
+
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
   if(all(is.na(HarvLim))) HarvLim <- matrix(0.,multiSiteInit$maxYears,2)
-  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),6)
+  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),9) #jhassort, 6->9 (record thinnings + comp)
   compHarv <- c(compHarv,thinFact)
   if(ageHarvPrior > 0.){
     sitesCl1 <- which(multiSiteInit$siteInfo[,3]<3.5)
@@ -1528,7 +1507,8 @@ reStartRegionPrebas <- function(multiSiteInit,
                      defaultThin=as.double(multiSiteInit$defaultThin),
                      ClCut=as.double(multiSiteInit$ClCut),
                      energyCut=as.double(multiSiteInit$energyCut),
-                     clct_pars=as.matrix(multiSiteInit$clct_pars),
+                     inDclct=as.matrix(multiSiteInit$inDclct),
+                     inAclct=as.matrix(multiSiteInit$inAclct),
                      dailyPRELES = as.array(multiSiteInit$dailyPRELES),
                      yassoRun=as.double(multiSiteInit$yassoRun),
                      multiEnergyWood = as.array(multiSiteInit$multiEnergyWood),
