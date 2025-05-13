@@ -46,7 +46,7 @@ integer, intent(inout) :: nThinning(nSites)
 real (kind=8), intent(out) :: fAPAR(nSites,maxYears)
 real (kind=8), intent(inout) :: initVar(nSites,7,maxNlayers),P0y(nClimID,maxYears,2),ETSy(nClimID,maxYears),ETSstart(nClimID)!,par_common
 real (kind=8), intent(inout) :: multiOut(nSites,maxYears,nVar,maxNlayers,2)
-real (kind=8), intent(inout) :: multiEnergyWood(nSites,maxYears,maxNlayers,17)!!energCuts jhassort
+real (kind=8), intent(inout) :: multiEnergyWood(nSites,maxYears,maxNlayers,17,2)!!energCuts jhassort
 real (kind=8), intent(inout) :: soilC(nSites,maxYears,5,3,maxNlayers),soilCtot(nSites,maxYears) !dimensions = nyears,AWENH,treeOrgans(woody,fineWoody,Foliage),species
 ! real (kind=8) :: soilC(nSites,maxYears,5,3,maxNlayers),soilCtot(nSites,maxYears) !dimensions = nyears,AWENH,treeOrgans(woody,fineWoody,Foliage),species
 real (kind=8), intent(in) :: pYasso(35), weatherYasso(nClimID,maxYears,3),litterSize(3,allSP) !litterSize dimensions: treeOrgans,species
@@ -112,7 +112,7 @@ do i = 1,nSites
    soilC(i,1:nYears(i),:,:,1:nLayers(i)),pYasso,pAWEN,weatherYasso(climID,1:nYears(i),:),&
    litterSize,soilCtot(i,1:nYears(i)),defaultThinX,&
    ClCutX,energyCuts(i),clct_pars(i,:,:),dailyPRELES(i,1:(nYears(i)*365),:),yassoRun(i),&
-   multiEnergyWood(i,1:nYears(i),1:nLayers(i),:),tapioPars,thdPer(i),limPer(i),ftTapio,tTapio,&
+   multiEnergyWood(i,1:nYears(i),1:nLayers(i),:,:),tapioPars,thdPer(i),limPer(i),ftTapio,tTapio,&
    GVout(i,1:nYears(i),:),thinInt(i),flagFert,nYearsFert,mortModX,&
    pECMmod,ETSstart(climID), siteInfoDist(i,:), outDist(i,1:nYears(i),:), &!wdimpl
     prebasFlags,latitude(i),P00CN(i),TsumSBBs(i,:)) !energyCut)

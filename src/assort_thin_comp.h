@@ -26,8 +26,8 @@ ets = multiOut(siteX,ij,5,ijj,1)
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
 if(assortType>1) then ! between generic (1) / advanced assortments (2) / potentials for every year (3; uses 2 for actual harvests)
-  if(assortType==3 .and. multiWood(siteX,ij,ijj,14) == 99.) Then
-    multiWood(siteX,ij,ijj,1:13) = 0.
+  if(assortType==3 .and. multiWood(siteX,ij,ijj,14,1) == 99.) Then
+    multiWood(siteX,ij,ijj,1:13,1) = 0.
     endif
 ! above: if potential assortments are calculated, set those to zero (otherwise the comp thinning is added to the potential (standing) assortments))
 ! if there's a regular thinning in the same year, this isn't necessary (potential overwritten by reg thin, to which the comp thin is added)
@@ -47,9 +47,9 @@ if(energyCutX==1.) then
     felled_croot*0.17+  &   ! coarse roots/coarse part: no stump harvests in thinnings, all to litter
     stem_assort(2)*par_rhow    ! abg stump not collected, to litter
 !ENERGY WOOD COLLECTION
-  multiWood(siteX,ij,ijj,6) = (stem_assort(5) + &! energywood total: stem+branches
+  multiWood(siteX,ij,ijj,6,1) = (stem_assort(5) + &! energywood total: stem+branches
         felled_branch/par_rhow)*energyRatio
-  multiWood(siteX,ij,ijj,5) = stem_assort(6)*energyRatio ! energywood from roundwood (to be used to meet harvest demand)
+  multiWood(siteX,ij,ijj,5,1) = stem_assort(6)*energyRatio ! energywood from roundwood (to be used to meet harvest demand)
 
 else !NO ENERGYCUT; stemwood, branches, coarse roots
 ! LITTER
@@ -61,25 +61,25 @@ else !NO ENERGYCUT; stemwood, branches, coarse roots
     felled_croot*0.17+ &
     stem_assort(2)*par_rhow ! abg stump (stemwood)
 ! ENERGY WOOD COLLECTION = 0
-  multiWood(siteX,ij,ijj,6) = 0 ! energywood total !!
-  multiWood(siteX,ij,ijj,5) = 0 ! energywood from roundwood (used to meet harvest demand)
+  multiWood(siteX,ij,ijj,6,1) = 0 ! energywood total !!
+  multiWood(siteX,ij,ijj,5,1) = 0 ! energywood from roundwood (used to meet harvest demand)
   endif !energycut
 
    !###### Fill rest of energyWood array ######
-multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + stem_assort(1) ! total roundwood
-multiWood(siteX,ij,ijj,3) = multiWood(siteX,ij,ijj,3) + stem_assort(3) ! sawnwood (quality reduced)
-multiWood(siteX,ij,ijj,4) = multiWood(siteX,ij,ijj,4) + stem_assort(4) ! pulpwood (including qred sawn, -harvestRatio)
+multiWood(siteX,ij,ijj,2,1) = multiWood(siteX,ij,ijj,2,1) + stem_assort(1) ! total roundwood
+multiWood(siteX,ij,ijj,3,1) = multiWood(siteX,ij,ijj,3,1) + stem_assort(3) ! sawnwood (quality reduced)
+multiWood(siteX,ij,ijj,4,1) = multiWood(siteX,ij,ijj,4,1) + stem_assort(4) ! pulpwood (including qred sawn, -harvestRatio)
 !   multiWood(siteX,ij,ijj,6) = stem_assort(5)*energyRatio ! energywood total // ADD STUMP, BRANCHES TO THIS !!
 !   multiWood(siteX,ij,ijj,5) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand)
-multiWood(siteX,ij,ijj,8) = multiWood(siteX,ij,ijj,8) + stem_assort(2) ! stump (100% abg, included in energywood if collected)
-multiWood(siteX,ij,ijj,13) = multiWood(siteX,ij,ijj,13) + stem_assort(7)*n_harvested ! total stemwood according to Laasasenaho taper function
+multiWood(siteX,ij,ijj,8,1) = multiWood(siteX,ij,ijj,8,1) + stem_assort(2) ! stump (100% abg, included in energywood if collected)
+multiWood(siteX,ij,ijj,13,1) = multiWood(siteX,ij,ijj,13,1) + stem_assort(7)*n_harvested ! total stemwood according to Laasasenaho taper function
 !   multiWood(siteX,ij,ijj,7) = 99. !energywood from stumps (if applicable; from stemwood (,,8) + coarse roots, *stumprecoveryrate
-multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,1) + v_harvested
-multiWood(siteX,ij,ijj,9) = multiWood(siteX,ij,ijj,9) + n_harvested
-multiWood(siteX,ij,ijj,10) = d_harvested !NOTE: overwrites double thinnings, but this happens extremely rarely
-multiWood(siteX,ij,ijj,12) = stem_assort(8) ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
-multiWood(siteX,ij,ijj,14) = multiWood(siteX,ij,ijj,14) + 20. !indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
-multiWood(siteX,ij,ijj,15) = turnover_cw
+multiWood(siteX,ij,ijj,1,1) = multiWood(siteX,ij,ijj,1,1) + v_harvested
+multiWood(siteX,ij,ijj,9,1) = multiWood(siteX,ij,ijj,9,1) + n_harvested
+multiWood(siteX,ij,ijj,10,1) = d_harvested !NOTE: overwrites double thinnings, but this happens extremely rarely
+multiWood(siteX,ij,ijj,12,1) = stem_assort(8) ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
+multiWood(siteX,ij,ijj,14,1) = multiWood(siteX,ij,ijj,14,1) + 20. !indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
+multiWood(siteX,ij,ijj,15,1) = turnover_cw
 
 multiOut(siteX,ij,37,ijj,1) = multiOut(siteX,ij,37,ijj,1) + stem_assort(3) + stem_assort(4)
 multiOut(siteX,ij,38,ijj,1) = multiOut(siteX,ij,38,ijj,1) + (stem_assort(3) + stem_assort(4)) * par_rhow
@@ -92,105 +92,106 @@ else if(assortType==INT(1)) then ! switch between generic (1) / advanced assortm
 
 if(energyCutX == 1.) then
 ! energywood collection
-  multiWood(siteX,ij,ijj,6) = multiWood(siteX,ij,ijj,6) + (multiOut(siteX,ij,24,ijj,1) + &
+  multiWood(siteX,ij,ijj,6,1) = multiWood(siteX,ij,ijj,6,1) + (multiOut(siteX,ij,24,ijj,1) + &
     multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio * thinFact
-  multiWood(siteX,ij,ijj,5) = multiWood(siteX,ij,ijj,6) ! no distinction between energywood from roundwood and harvest residues here
-! litter
-  ! multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio) * thinFact +   &
-  !   multiOut(siteX,ij,51,ijj,1)* thinFact + multiOut(siteX,ij,28,ijj,1)) + &
-  !   multiOut(siteX,ij,31,ijj,1)* (1-harvRatio) * (1-energyRatio) * thinFact + &
-  !   (0.3 * (1-energyRatio)+0.7) * multiOut(siteX,ij,32,ijj,1) *0.83 * thinFact))
-  ! multiOut(siteX,ij,29,ijj,1) = (0.3 * (1-energyRatio)+0.7) * multiOut(siteX,ij,32,ijj,1) *0.17 * thinFact+ &
-  ! multiOut(siteX,ij,29,ijj,1)
+  multiWood(siteX,ij,ijj,5,1) = multiWood(siteX,ij,ijj,6,1) ! no distinction between energywood from roundwood and harvest residues here
 
-  turnover_fw = max(0.,(turnover_fw + felled_branch * (1-energyRatio) +  &
-    (0.3 * (1-energyRatio)+0.7) * felled_croot *0.83))
-  turnover_cw = turnover_cw + &
-    ((0.3 * (1-energyRatio) + 0.7) * felled_croot * 0.17 + &
-    v_harvested*par_rhow * (1-harvRatio))* (1-energyRatio)
+  ! litter
+    ! multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio) * thinFact +   &
+    !   multiOut(siteX,ij,51,ijj,1)* thinFact + multiOut(siteX,ij,28,ijj,1)) + &
+    !   multiOut(siteX,ij,31,ijj,1)* (1-harvRatio) * (1-energyRatio) * thinFact + &
+    !   (0.3 * (1-energyRatio)+0.7) * multiOut(siteX,ij,32,ijj,1) *0.83 * thinFact))
+    ! multiOut(siteX,ij,29,ijj,1) = (0.3 * (1-energyRatio)+0.7) * multiOut(siteX,ij,32,ijj,1) *0.17 * thinFact+ &
+    ! multiOut(siteX,ij,29,ijj,1)
 
-else ! no energywood collection
-  !litter
-    turnover_fw = max(0.,(turnover_fw + felled_branch  +  &
-       felled_croot *0.83))
-    turnover_cw = turnover_cw + felled_croot * 0.17 + &
-       v_harvested*par_rhow*(1-harvRatio)!(1-harvRatio) takes into account of the stem
-endif! simple assortments: energyCut
+    turnover_fw = max(0.,(turnover_fw + felled_branch * (1-energyRatio) +  &
+      (0.3 * (1-energyRatio)+0.7) * felled_croot *0.83))
+    turnover_cw = turnover_cw + &
+      ((0.3 * (1-energyRatio) + 0.7) * felled_croot * 0.17 + &
+      v_harvested*par_rhow * (1-harvRatio))* (1-energyRatio)
 
-!# Filling rest of energyWood array ######
-multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + v_harvested*harvRatio          ! total roundwood
-multiWood(siteX,ij,ijj,3) = multiWood(siteX,ij,ijj,3) + v_harvested*harvRatio*0.5          ! NOTE: dummy, so the Vharvested allocation works
-multiWood(siteX,ij,ijj,4) = multiWood(siteX,ij,ijj,4) + v_harvested*harvRatio*0.5          !
+  else ! no energywood collection
+    !litter
+      turnover_fw = max(0.,(turnover_fw + felled_branch  +  &
+         felled_croot *0.83))
+      turnover_cw = turnover_cw + felled_croot * 0.17 + &
+         v_harvested*par_rhow*(1-harvRatio)!(1-harvRatio) takes into account of the stem
+  endif! simple assortments: energyCut
 
-multiWood(siteX,ij,ijj,8) = 99.              ! stump (100% abg, partially included in energywood if collected)
-multiWood(siteX,ij,ijj,13) = 99.  ! total stemwood according to Laasasenaho taper function
-multiWood(siteX,ij,ijj,7) = 99.                         ! energywood from stumps (not applicable in thinnings)
-multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,1) + v_harvested
-multiWood(siteX,ij,ijj,9) = multiWood(siteX,ij,ijj,9) + n_harvested
-multiWood(siteX,ij,ijj,10) = d_harvested !NOTE: overwrites double thinnings, but this happens extremely rarely
-multiWood(siteX,ij,ijj,14) = h_harvested !NOTE: overwrites double thinnings, but this happens extremely rarely
-multiWood(siteX,ij,ijj,12) = 99.
-multiWood(siteX,ij,ijj,14) = multiWood(siteX,ij,ijj,14) + 20. !indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
+  !# Filling rest of energyWood array ######
+  multiWood(siteX,ij,ijj,2,1) = multiWood(siteX,ij,ijj,2,1) + v_harvested*harvRatio          ! total roundwood
+  multiWood(siteX,ij,ijj,3,1) = multiWood(siteX,ij,ijj,3,1) + v_harvested*harvRatio*0.5          ! NOTE: dummy, so the Vharvested allocation works
+  multiWood(siteX,ij,ijj,4,1) = multiWood(siteX,ij,ijj,4,1) + v_harvested*harvRatio*0.5          !
 
-multiOut(siteX,ij,37,ijj,1) = multiOut(siteX,ij,37,ijj,1) + & !update harvested volume
- v_harvested*harvRatio
-multiOut(siteX,ij,38,ijj,1) = multiOut(siteX,ij,38,ijj,1) + & !update harvested biomass
- multiOut(siteX,ij,31,ijj,1)*harvRatio*thinFact
+  multiWood(siteX,ij,ijj,8,1) = 99.              ! stump (100% abg, partially included in energywood if collected)
+  multiWood(siteX,ij,ijj,13,1) = 99.  ! total stemwood according to Laasasenaho taper function
+  multiWood(siteX,ij,ijj,7,1) = 99.                         ! energywood from stumps (not applicable in thinnings)
+  multiWood(siteX,ij,ijj,1,1) = multiWood(siteX,ij,ijj,1,1) + v_harvested
+  multiWood(siteX,ij,ijj,9,1) = multiWood(siteX,ij,ijj,9,1) + n_harvested
+  multiWood(siteX,ij,ijj,10,1) = d_harvested !NOTE: overwrites double thinnings, but this happens extremely rarely
+  multiWood(siteX,ij,ijj,14,1) = h_harvested !NOTE: overwrites double thinnings, but this happens extremely rarely
+  multiWood(siteX,ij,ijj,12,1) = 99.
+  multiWood(siteX,ij,ijj,14,1) = multiWood(siteX,ij,ijj,14,1) + 20. !indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
 
- roundWood = roundWood + v_harvested*harvRatio*areas(siteX) !collecting variable used to meet roundwoood demand (within assorttype to prevent double accounting fo reg+comp mgmt)
- endif !simple assortments
+  multiOut(siteX,ij,37,ijj,1) = multiOut(siteX,ij,37,ijj,1) + & !update harvested volume
+   v_harvested*harvRatio
+  multiOut(siteX,ij,38,ijj,1) = multiOut(siteX,ij,38,ijj,1) + & !update harvested biomass
+   multiOut(siteX,ij,31,ijj,1)*harvRatio*thinFact
 
-
-! collecting variables to meet harvest limits
-energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,5)* areas(siteX) !jh changed from 1 to 6 (energywood from roundwood) ... and back again to troubleshoot  !!energCuts !!!we are looking at volumes
-energyWood(2) = energyWood(2) + multiWood(siteX,ij,ijj,6)* areas(siteX) !jh changed from 1 to 6 (energywood from roundwood) ... and back again to troubleshoot  !!energCuts !!!we are looking at volumes
-
-! REMOVE
-! ! Litter: feed back into multiOut
-! multiOut(siteX,ij,28,ijj,1) = turnover_fw
-! multiOut(siteX,ij,29,ijj,1) = turnover_cw
-
-!jh [relocated] updating harvested dimension
-
-!
-! multiOut(siteX,ij,9:10,ijj,2) = multiOut(siteX,ij,9:10,ijj,1) * thinFact
-! multiOut(siteX,ij,11:12,ijj,2) = multiOut(siteX,ij,11:12,ijj,1)
-! multiOut(siteX,ij,13,ijj,2) = multiOut(siteX,ij,13,ijj,1) * thinFact
-! multiOut(siteX,ij,14:16,ijj,2) = multiOut(siteX,ij,14:16,ijj,1)
-! multiOut(siteX,ij,17:23,ijj,2) = multiOut(siteX,ij,17:23,ijj,1) * thinFact
-! multiOut(siteX,ij,26:29,ijj,2) = multiOut(siteX,ij,26:29,ijj,1) * thinFact
-!
-! !update biomasses and Volumes
-! multiOut(siteX,ij,24:25,ijj,2) = multiOut(siteX,ij,24:25,ijj,1) * thinFact + &
-! 		multiOut(siteX,ij,24:25,ijj,2)
-! multiOut(siteX,ij,30:34,ijj,2) = multiOut(siteX,ij,30:34,ijj,1) * thinFact + &
-! 		multiOut(siteX,ij,30:34,ijj,2)
-!
-! multiOut(siteX,ij,35,ijj,2) = multiOut(siteX,ij,35,ijj,1)
-! multiOut(siteX,ij,44,ijj,2) = multiOut(siteX,ij,44,ijj,1) * thinFact
-
-!/REMOVE
+   roundWood = roundWood + v_harvested*harvRatio*areas(siteX) !collecting variable used to meet roundwoood demand (within assorttype to prevent double accounting fo reg+comp mgmt)
+   endif !simple assortments
 
 
+  ! collecting variables to meet harvest limits
+  energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,5,1)* areas(siteX) !jh changed from 1 to 6 (energywood from roundwood) ... and back again to troubleshoot  !!energCuts !!!we are looking at volumes
+  energyWood(2) = energyWood(2) + multiWood(siteX,ij,ijj,6,1)* areas(siteX) !jh changed from 1 to 6 (energywood from roundwood) ... and back again to troubleshoot  !!energCuts !!!we are looking at volumes
+
+  ! REMOVE
+  ! ! Litter: feed back into multiOut
+  ! multiOut(siteX,ij,28,ijj,1) = turnover_fw
+  ! multiOut(siteX,ij,29,ijj,1) = turnover_cw
+
+  !jh [relocated] updating harvested dimension
+
+  !
+  ! multiOut(siteX,ij,9:10,ijj,2) = multiOut(siteX,ij,9:10,ijj,1) * thinFact
+  ! multiOut(siteX,ij,11:12,ijj,2) = multiOut(siteX,ij,11:12,ijj,1)
+  ! multiOut(siteX,ij,13,ijj,2) = multiOut(siteX,ij,13,ijj,1) * thinFact
+  ! multiOut(siteX,ij,14:16,ijj,2) = multiOut(siteX,ij,14:16,ijj,1)
+  ! multiOut(siteX,ij,17:23,ijj,2) = multiOut(siteX,ij,17:23,ijj,1) * thinFact
+  ! multiOut(siteX,ij,26:29,ijj,2) = multiOut(siteX,ij,26:29,ijj,1) * thinFact
+  !
+  ! !update biomasses and Volumes
+  ! multiOut(siteX,ij,24:25,ijj,2) = multiOut(siteX,ij,24:25,ijj,1) * thinFact + &
+  ! 		multiOut(siteX,ij,24:25,ijj,2)
+  ! multiOut(siteX,ij,30:34,ijj,2) = multiOut(siteX,ij,30:34,ijj,1) * thinFact + &
+  ! 		multiOut(siteX,ij,30:34,ijj,2)
+  !
+  ! multiOut(siteX,ij,35,ijj,2) = multiOut(siteX,ij,35,ijj,1)
+  ! multiOut(siteX,ij,44,ijj,2) = multiOut(siteX,ij,44,ijj,1) * thinFact
+
+  !/REMOVE
 
 
-!UPDATE LITTER
-! Litter foliage and fine roots
-multiOut(siteX,ij,26,ijj,1) = multiOut(siteX,ij,33,ijj,1) * thinFact + multiOut(siteX,ij,26,ijj,1)
-multiOut(siteX,ij,27,ijj,1) = multiOut(siteX,ij,25,ijj,1) * thinFact + multiOut(siteX,ij,27,ijj,1)
-! Litter: fine & coarse woody
-multiOut(siteX,ij,28,ijj,1) = turnover_fw
-multiOut(siteX,ij,29,ijj,1) = turnover_cw
 
-!UPDATE additional variables
-multiOut(siteX,ij,9:10,ijj,1) = multiOut(siteX,ij,9:10,ijj,1)*(1-thinFact)
-multiOut(siteX,ij,13,ijj,1) = multiOut(siteX,ij,13,ijj,1)*(1-thinFact)
-multiOut(siteX,ij,17:25,ijj,1) = multiOut(siteX,ij,17:25,ijj,1)*(1-thinFact)
-multiOut(siteX,ij,30:33,ijj,1) = multiOut(siteX,ij,30:33,ijj,1)*(1-thinFact)
-multiOut(siteX,ij,47:51,ijj,1) = multiOut(siteX,ij,47:51,ijj,1)*(1-thinFact)
-multiOut(siteX,ij,53:nVar,ijj,1) = multiOut(siteX,ij,53:nVar,ijj,1)*(1-thinFact)
 
-initVar(siteX,1,ijj) = multiOut(siteX,ij,4,ijj,1)
-initVar(siteX,2,ijj) = multiOut(siteX,ij,7,ijj,1)
-initVar(siteX,3:6,ijj) = multiOut(siteX,ij,11:14,ijj,1)
-initVar(siteX,7,ijj) = multiOut(siteX,ij,16,ijj,1)
+  !UPDATE LITTER
+  ! Litter foliage and fine roots
+  multiOut(siteX,ij,26,ijj,1) = multiOut(siteX,ij,33,ijj,1) * thinFact + multiOut(siteX,ij,26,ijj,1)
+  multiOut(siteX,ij,27,ijj,1) = multiOut(siteX,ij,25,ijj,1) * thinFact + multiOut(siteX,ij,27,ijj,1)
+  ! Litter: fine & coarse woody
+  multiOut(siteX,ij,28,ijj,1) = turnover_fw
+  multiOut(siteX,ij,29,ijj,1) = turnover_cw
+
+  !UPDATE additional variables
+  multiOut(siteX,ij,9:10,ijj,1) = multiOut(siteX,ij,9:10,ijj,1)*(1-thinFact)
+  multiOut(siteX,ij,13,ijj,1) = multiOut(siteX,ij,13,ijj,1)*(1-thinFact)
+  multiOut(siteX,ij,17:25,ijj,1) = multiOut(siteX,ij,17:25,ijj,1)*(1-thinFact)
+  multiOut(siteX,ij,30:33,ijj,1) = multiOut(siteX,ij,30:33,ijj,1)*(1-thinFact)
+  multiOut(siteX,ij,47:51,ijj,1) = multiOut(siteX,ij,47:51,ijj,1)*(1-thinFact)
+  multiOut(siteX,ij,53:nVar,ijj,1) = multiOut(siteX,ij,53:nVar,ijj,1)*(1-thinFact)
+
+  initVar(siteX,1,ijj) = multiOut(siteX,ij,4,ijj,1)
+  initVar(siteX,2,ijj) = multiOut(siteX,ij,7,ijj,1)
+  initVar(siteX,3:6,ijj) = multiOut(siteX,ij,11:14,ijj,1)
+  initVar(siteX,7,ijj) = multiOut(siteX,ij,16,ijj,1)

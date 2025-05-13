@@ -46,11 +46,12 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5),minDharv,ageM
  real (kind=8), intent(out) :: fAPAR(nSites,maxYears)
  real (kind=8), intent(inout) :: initVar(nSites,7,maxNlayers),P0y(nClimID,maxYears,2),ETSy(nClimID,maxYears),ETSstart(nClimID)!,par_common
  real (kind=8), intent(inout) :: multiOut(nSites,maxYears,nVar,maxNlayers,2)
- real (kind=8), intent(inout) :: multiWood(nSites,maxYears,maxNlayers,17)!!energCuts jhassort extend
+ real (kind=8), intent(inout) :: multiWood(nSites,maxYears,maxNlayers,17,2)!!energCuts jhassort extend
  real (kind=8), intent(inout) :: soilCinOut(nSites,maxYears,5,3,maxNlayers),soilCtotInOut(nSites,maxYears) !dimensions = nyears,AWENH,treeOrgans(woody,fineWoody,Foliage),species
  real (kind=8) :: soilC(nSites,maxYears,5,3,maxNlayers),soilCtot(nSites,maxYears) !dimensions = nyears,AWENH,treeOrgans(woody,fineWoody,Foliage),species
  real (kind=8), intent(in) :: pYasso(35), weatherYasso(nClimID,maxYears,3),litterSize(3,allSP) !litterSize dimensions: treeOrgans,species
- real (kind=8) :: output(1,nVar,maxNlayers,2),totBA(nSites), relBA(nSites,maxNlayers),wood(1,maxNlayers,17) !jhasssort 2->17
+ real (kind=8) :: output(1,nVar,maxNlayers,2),totBA(nSites), relBA(nSites,maxNlayers)
+ real (kind=8) :: wood(1,maxNlayers,17,2) !jhasssort 2->17 vars, last dimension: 1=realised/harvested assortments, 2=potential/standing assortments
  real (kind=8) :: ClCutX, defaultThinX,maxState(nSites),check(maxYears), thinningX(maxThin,11)
  real (kind=8) :: energyWood(2), roundWood, energyCutX,thinFact,energy_flag=0., siteHarv(nSites)  !!energCuts
  integer :: maxYearSite = 300,Ainit,sitex,ops(1),species,layerX,domSp(1)
@@ -95,7 +96,7 @@ real (kind=8) :: minFapar,fAparFactor=0.9
   integer, intent(inout) :: prebasFlags(9)
 
 
-  multiWood(1,1,1,1) = 4242.
+  multiWood(1,1,1,1,1) = 4242.
   !jhup ASSORTMENTS: SETTINGS
   ! switch between generic/simple (1) and complex/taper+qred assortments (2)
   assortType = INT(3)
@@ -141,7 +142,7 @@ if(prebasFlags(6)==1 .or. prebasFlags(6)==12 .or. prebasFlags(6)==13 .or. prebas
 yearXrepl = 0.
 soilC = soilCinOut
 soilCtot = soilCtotInOut
-multiWood = 0.
+multiWood(:,:,:,:,1) = 0.
 cuttingArea(:,2) = 0.
 cuttingArea(:,4) = 0.
 cuttingArea(:,6) = 0.
@@ -455,7 +456,7 @@ endif
     soilC(i,ij,:,:,1:nLayers(i)),pYasso,pAWEN,weatherYasso(climID,ij,:),&
     litterSize,soilCtot(i,ij),&
     defaultThinX,ClCutX,energyCutX,clct_pars(i,:,:), & !!energCuts
-    dailyPRELES(i,(((ij-1)*365)+1):(ij*365),:),yassoRun(i),wood(1,1:nLayers(i),:),&
+    dailyPRELES(i,(((ij-1)*365)+1):(ij*365),:),yassoRun(i),wood(1,1:nLayers(i),:,:),&
     tapioPars,thdPer(i),limPer(i),ftTapioX,tTapioX,GVout(i,ij,:),thinInt(i), &
     flagFert(i),nYearsFert,mortModX,pECMmod,ETSstart(climID), &
     siteInfoDist(i,:), outDist(i,ij,:), prebasFlags, latitude(i),P00CN(i), TsumSBBs(i,:)) !!wdimpl pflags !!energCuts
@@ -525,7 +526,7 @@ endif
    endif
   endif
 
-  multiWood(i,ij,1:nLayers(i),:) = wood(1,1:nLayers(i),:)
+  multiWood(i,ij,1:nLayers(i),:,:) = wood(1,1:nLayers(i),:,:)
   multiOut(i,ij,1:2,1:nLayers(i),:) = output(1,1:2,1:nLayers(i),:)
   multiOut(i,ij,4:7,1:nLayers(i),:) = output(1,4:7,1:nLayers(i),:)
   multiOut(i,ij,9:nVar,1:nLayers(i),:) = output(1,9:nVar,1:nLayers(i),:)
@@ -551,8 +552,8 @@ endif
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     !energyWood(1) = energyWood(1) + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes jhassort +(1)
-       energyWood(1) = energyWood(1) + sum(wood(1,1:nLayers(i),7))* areas(i) !jhassort energywood from roundwood // attention
-          energyWood(2) = energyWood(2) + sum(wood(1,1:nLayers(i),6))* areas(i) !jhup energywood total
+       energyWood(1) = energyWood(1) + sum(wood(1,1:nLayers(i),7,1))* areas(i) !jhassort energywood from roundwood // attention
+          energyWood(2) = energyWood(2) + sum(wood(1,1:nLayers(i),6,1))* areas(i) !jhup energywood total
   endif
  end do !iz i site loop
 
@@ -921,7 +922,7 @@ endif
      multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
       multiOut(siteX,ij,31,1:jj,1)*harvRatio
    multiOut(siteX,ij,2,1,2) = 2. !!!flag for clearcut compensation
-   multiWood(siteX,ij,1,14) = multiWood(siteX,ij,1,14) + 10. !jhassort indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
+   multiWood(siteX,ij,1,14,1) = multiWood(siteX,ij,1,14,1) + 10. !jhassort indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
      do ijj = 1, jj
       multiOut(siteX,ij,6:23,ijj,2) = multiOut(siteX,ij,6:23,ijj,1)
       multiOut(siteX,ij,26,ijj,1) = multiOut(siteX,ij,33,ijj,1) + multiOut(siteX,ij,26,ijj,1)
@@ -935,12 +936,12 @@ endif
           multiOut(siteX,ij,30:34,ijj,2)
 !!energCuts
       if(energyCutX == 1.) then
-     multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + (multiOut(siteX,ij,24,ijj,1) + &
+     multiWood(siteX,ij,ijj,2,1) = multiWood(siteX,ij,ijj,2,1) + (multiOut(siteX,ij,24,ijj,1) + &
       multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio
      species = int(multiOut(siteX,ij,4,ijj,1))
-     if(pCrobas(2,species)>0.)   multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,2) / pCrobas(2,species)
-     energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,7) * areas(siteX)  !jhassort 1->6 !!energCuts !!!we are looking at volumes
- energyWood(2) = energyWood(2) + multiWood(siteX,ij,ijj,6) * areas(siteX)  !jh 1->6
+     if(pCrobas(2,species)>0.)   multiWood(siteX,ij,ijj,1,1) = multiWood(siteX,ij,ijj,2,1) / pCrobas(2,species)
+     energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,7,1) * areas(siteX)  !jhassort 1->6 !!energCuts !!!we are looking at volumes
+ energyWood(2) = energyWood(2) + multiWood(siteX,ij,ijj,6,1) * areas(siteX)  !jh 1->6
 
         multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio)  +   &
       multiOut(siteX,ij,51,ijj,1) + multiOut(siteX,ij,28,ijj,1)) + &
@@ -1039,7 +1040,7 @@ endif
 
    roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)* thinFact *areas(siteX) !!energCuts
      multiOut(siteX,ij,1,1,2) = 4. !!!flag for thinning compensation
-     multiWood(siteX,ij,1,14) = multiWood(siteX,ij,1,14) + 20. !jhassort indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
+     multiWood(siteX,ij,1,14,1) = multiWood(siteX,ij,1,14,1) + 20. !jhassort indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
    multiOut(siteX,ij,37,:,1) = multiOut(siteX,ij,37,1:jj,1) + &
       multiOut(siteX,ij,30,1:jj,1)*harvRatio*thinFact
    multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
@@ -1067,12 +1068,12 @@ endif
       multiOut(siteX,ij,27,ijj,1) = multiOut(siteX,ij,25,ijj,1) * thinFact + multiOut(siteX,ij,27,ijj,1)
 !!energCuts
       if(energyCutX == 1.) then
-     multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + (multiOut(siteX,ij,24,ijj,1) + &
+     multiWood(siteX,ij,ijj,2,1) = multiWood(siteX,ij,ijj,2,1) + (multiOut(siteX,ij,24,ijj,1) + &
       multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio * thinFact
      species = int(multiOut(siteX,ij,4,ijj,1))
-     if(pCrobas(2,species)>0.) multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,2) / pCrobas(2,species)
-     energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,7) * areas(siteX)  !jhassort 1->6  !!energCuts !!!we are looking at volumes
-          energyWood(2) = energyWood(2) + multiWood(siteX,ij,ijj,6) * areas(siteX)  !jh 1->6  !!energCuts !!!we are looking at volumes
+     if(pCrobas(2,species)>0.) multiWood(siteX,ij,ijj,1,1) = multiWood(siteX,ij,ijj,2,1) / pCrobas(2,species)
+     energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,7,1) * areas(siteX)  !jhassort 1->6  !!energCuts !!!we are looking at volumes
+          energyWood(2) = energyWood(2) + multiWood(siteX,ij,ijj,6,1) * areas(siteX)  !jh 1->6  !!energCuts !!!we are looking at volumes
      multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio) * thinFact +   &
       multiOut(siteX,ij,51,ijj,1)* thinFact + multiOut(siteX,ij,28,ijj,1)) + &
      multiOut(siteX,ij,31,ijj,1)* (1-harvRatio) * (1-energyRatio) * thinFact + &
