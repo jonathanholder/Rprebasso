@@ -798,7 +798,7 @@ getVarNam <- function(){
     
     dims=dim(multiSiteInit$multiEnergyWood);dims[3] <- maxNlayers
     multiEnergyWood = array(0,dim=dims)
-    multiEnergyWood[,,1:(maxNlayers-1),] <- multiSiteInit$multiEnergyWood
+    multiEnergyWood[,,1:(maxNlayers-1),,] <- multiSiteInit$multiEnergyWood
     multiSiteInit$multiEnergyWood <- multiEnergyWood
     
     return(multiSiteInit)

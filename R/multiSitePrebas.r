@@ -1069,7 +1069,6 @@ regionPrebas <- function(multiSiteInit,
   dimnames(siteInfoDist) <-  list(site=NULL,
                                   variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
 
-
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
   if(all(is.na(HarvLim))) HarvLim <- matrix(0.,multiSiteInit$maxYears,2)
 
@@ -1204,8 +1203,7 @@ regionPrebas <- function(multiSiteInit,
                               multiSiteInit$CO2model,
                               0,### fixAinit
                               -777)) ###ingrowth flag
-
-
+print(dim(multiSiteInit$multiEnergyWood)) #abug
   prebas <- .Fortran("regionPrebas",
                      siteOrder = as.matrix(siteOrder),
                      HarvLim = as.matrix(HarvLim),

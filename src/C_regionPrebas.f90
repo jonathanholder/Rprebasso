@@ -96,10 +96,10 @@ real (kind=8) :: minFapar,fAparFactor=0.9
   integer, intent(inout) :: prebasFlags(9)
 
 
-  multiWood(1,1,1,1,1) = 4242.
+  !multiWood(1,1,1,1,1) = 4242.
   !jhup ASSORTMENTS: SETTINGS
   ! switch between generic/simple (1) and complex/taper+qred assortments (2)
-  assortType = INT(3)
+  assortType = INT(1)
 
   !ratio of stumps extracted if they are collected/stumpsampled=T
   stumprecoveryrate = 0.9 ! NOTE: != stumpratio (the ratio of stump harvesting conducted if prerequisites are met)
@@ -439,6 +439,7 @@ endif
       outDist(i, max(INT(ij-1),1), 9) = 0.
    endif
 
+   open(1,file="l444.txt") !abug
 
    if(Clcut(i) < 0) then !protected area / unmanaged site flag: Clcut = -1, needs to override setting to 0 to block tapio mgmt above in order to also block salvage logging/mgmtreaction to disturbances
      ClCutX = Clcut(i)
@@ -448,6 +449,8 @@ endif
   if(ij>1) then
    output(1,46,1,2) = multiOut(i,(ij-1),46,1,2) !!SMI previous year, used in bark beetle intensity calculation
   endif
+
+  open(1,file="l453.txt") !abug
 
   call prebas(1,nLayers(i),allSP,siteInfo(i,:),pCrobas,initVar(i,:,1:nLayers(i)),&
     thinningX(1:az,:),output(1,:,1:nLayers(i),:),az,maxYearSite,fAPAR(i,ij),initClearcut(i,:),&
@@ -472,6 +475,7 @@ endif
      multiOut(i,ij:maxYears,3,nLayers(i),1) = output(1,3,nLayers(i),1)
      multiOut(i,ij:maxYears,3,nLayers(i),2) = output(1,3,nLayers(i),2)
   endif
+  open(1,file="l478.txt") !abug
 
 !!!!if the ingrowth layer was activated then update alfar
 if(prebasFlags(9) > 0) then
@@ -525,11 +529,23 @@ endif
     relBA(i,1:jj) = initVar(i,5,1:jj)/sum(initVar(i,5,1:jj))
    endif
   endif
+  open(1,file="l532.txt") !abug
+  open(2,file="assorttest3.txt") !abug
 
+write(2,*) "multiwood ", multiWood(i,ij,1:nLayers(i),:,:)
+open(3,file="multiwood_pasted.txt") !abug
+
+write(2,*) "wood ", wood(1,1:nLayers(i),:,:)
+open(4,file="wood_pasted.txt") !abug
+
+close(2)
   multiWood(i,ij,1:nLayers(i),:,:) = wood(1,1:nLayers(i),:,:)
+  open(1,file="l539.txt") !abug
+
   multiOut(i,ij,1:2,1:nLayers(i),:) = output(1,1:2,1:nLayers(i),:)
   multiOut(i,ij,4:7,1:nLayers(i),:) = output(1,4:7,1:nLayers(i),:)
   multiOut(i,ij,9:nVar,1:nLayers(i),:) = output(1,9:nVar,1:nLayers(i),:)
+  open(1,file="l544.txt") !abug
 
   if(multiOut(i,ij,1,1,2) == 1.) then
     cuttingArea(ij,4) = cuttingArea(ij,4) + areas(i)
@@ -540,15 +556,18 @@ endif
   if(multiOut(i,ij,1,1,2) == 3.) then
   cuttingArea(ij,6) = cuttingArea(ij,7) + areas(i) !jhassort record thinnings
 endif
+open(1,file="l549.txt") !abug
 
   initVar(i,1,1:nLayers(i)) = output(1,4,1:nLayers(i),1)
   initVar(i,2,1:nLayers(i)) = output(1,7,1:nLayers(i),1)
   initVar(i,3:6,1:nLayers(i)) = output(1,11:14,1:nLayers(i),1)
   initVar(i,7,1:nLayers(i)) = output(1,16,1:nLayers(i),1)
   ! initVar(i,8,1:nLayers(i)) = output(1,2,1:nLayers(i),1)  !!newX
+  !abug: outcomment next 9 lines, in one run, the l549 file was created, the l576 one wasn't...
   if(isnan(sum(output(1,37,1:nLayers(i),1)))) then
     roundWood = roundWood
-    energyWood(:) = energyWood(:) !jhassort
+    energyWood(1) = energyWood(1) !jhassort
+    energyWood(2) = energyWood(2) !jhassort
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     !energyWood(1) = energyWood(1) + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes jhassort +(1)
@@ -556,6 +575,7 @@ endif
           energyWood(2) = energyWood(2) + sum(wood(1,1:nLayers(i),6,1))* areas(i) !jhup energywood total
   endif
  end do !iz i site loop
+ open(1,file="l576.txt") !abug
 
  !!! check if the harvest limit of the area has been reached otherwise clearcut the stands sorted by DBH
  !or thin based on stand density index
@@ -567,10 +587,15 @@ if(roundWood < HarvLim(ij,1) .and. compHarv(1)>0.5) then
    n = n + 1
    !!!search for site with highest DBH
    do i = 1, nSites
+     open(1,file="l588.txt") !abug
+
 if(oldLayer==1) then
  jj=max((nLayers(i)-1),1)
 else
  jj=nLayers(i)
+
+ open(1,file="l595.txt") !abug
+
 endif
   if(ClCut(i) > 0. ) then
    maxState(i) = maxval(multiOut(i,ij,12,1:jj,1))!!!search for site with highest DBH
@@ -586,11 +611,13 @@ endif
      if (HarvLim(ij,2) > 0. .and.  energyWood(1) >= HarvLim(ij,2)) then    !!energCuts jhassort
     energyCutX = 0.
    endif
+   open(1,file="l609.txt") !abug
 
    !if fertilization at thinning is active reset flagFert
    if(fertThin > 0) then
     flagFert(siteX) = 0
    endif
+   open(1,file="l614.txt") !abug
 
 !!if oldLayer scenario -> populate old layer with the dominant species and clearcut other layers
 if(oldLayer==1) then
@@ -623,6 +650,7 @@ if(oldLayer==1) then
 else
  jj=nLayers(siteX)
 endif
+open(1,file="l646.txt") !abug
 
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
@@ -675,7 +703,7 @@ endif
 !//end outcomment jhassort
 !!energCuts
     ! multiOut(siteX,ij,8,ijj,1) = 0.
-    include 'assort_cc_comp.h'
+  !  include 'assort_cc_comp.h'
 
       ! below:moved to assort_cc_comp_h
       ! multiOut(siteX,ij,10:17,ijj,1) = 0.
@@ -686,6 +714,7 @@ endif
       !   multiOut(siteX,ij,43,ijj,1) = 0.
       ! multiOut(siteX,ij,47:nVar,ijj,1) = 0.
 
+      open(1,file="l693.txt") !abug
 
     ! multiOut(siteX,ij,38,ijj,1) = sum(multiOut(siteX,1:ij,30,ijj,2)) + &
     ! sum(multiOut(siteX,1:ij,42,ijj,1)) + multiOut(siteX,ij,30,ijj,1)
@@ -837,8 +866,9 @@ endif
 
     !############################################
 
-    include 'assort_thin_comp.h'
+    !include 'assort_thin_comp.h'
      enddo !ijj layers loop
+     open(1,file="l847.txt") !abug
 
    !!!if fertilization at thinning is active,  decrease siteType
   if(flagFert(siteX)==1 .and. fertThin>0 .and. siteInfo(siteX,3)>3. .and. siteInfo(siteX,3)<6.) then
@@ -914,6 +944,9 @@ if(oldLayer==1) then
 else
  jj=nLayers(i)
 endif
+
+open(1,file="l946.txt") !abug
+
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
      roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !!energCuts
@@ -982,6 +1015,7 @@ endif
     relBA(siteX,1:nLayers(i)) = multiOut(siteX,(ij-1),13,1:nLayers(i),1)/ &
     sum(multiOut(siteX,(ij-1),13,1:nLayers(i),1))
    endif
+   open(1,file="l991.txt") !abug
 
       ! initVar(siteX,1,1:nLayers(siteX)) = multiOut(siteX,ij,4,1:nLayers(siteX),1)
    ! initVar(siteX,2,1:nLayers(siteX)) = multiOut(siteX,ij,7,1:nLayers(siteX),1)
@@ -1005,6 +1039,7 @@ endif
   ! maxState(i) = 0.
    ! endif
 ! !!end!! use stand density index to order the forests
+open(1,file="l1040.txt") !abug
 
  domSp = maxloc(multiOut(siteX,ij,13,1:jj,1))
  layerX = int(domSp(1))
@@ -1037,6 +1072,7 @@ if(oldLayer==1) then
 else
  jj=nLayers(siteX)
 endif
+open(1,file="l1073.txt") !abug
 
    roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)* thinFact *areas(siteX) !!energCuts
      multiOut(siteX,ij,1,1,2) = 4. !!!flag for thinning compensation
@@ -1117,9 +1153,11 @@ endif
   endif !(maxState(i)>minDharv)
    enddo !end do while
 
+   open(1,file="l1154.txt") !abug
 
  endif
 endif !roundWood < HarvLim .and. HarvLim /= 0.
+open(1,file="l1158.txt") !abug
 
   !HarvLim(ij,1) = roundWood
   !HarvLim(ij,2) = energyWood
@@ -1179,9 +1217,14 @@ endif !roundWood < HarvLim .and. HarvLim /= 0.
      multiOut(i,ij,43,ijj,1) = multiOut(i,ij,30,ijj,1) - multiOut(i,(ij-1),30,ijj,1) + &
       multiOut(i,ij,37,ijj,1)/harvRatio + multiOut(i,ij,42,ijj,1)
     endif
+    open(1,file="l1218.txt") !abug
 
     enddo !ijj
+    open(1,file="l1221.txt") !abug
+
   enddo
+  open(1,file="l1224.txt") !abug
+
  enddo
   ! close(1)
   ! close(2)

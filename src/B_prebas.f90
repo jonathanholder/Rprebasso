@@ -173,6 +173,8 @@ integer, intent(inout) :: prebasFlags(9)
   REAL (kind=8) :: lat, lon, alt !
   INTEGER :: mkta, peat ! 1 = pine, 2 = spruce, 3 = birch + broad
 
+  open(1,file="cpreb_l176.txt") !abug
+
 
 !!! 'un-vectorise' flags, fvec !wdimpl
 etmodel = int(prebasFlags(1))
@@ -280,6 +282,7 @@ ETSmean = ETSstart !initialise ETSmean using the starting value
   endif
 
  enddo
+ open(1,file="cpreb_l285.txt") !abug
 
 !######! SIMULATION START !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 do year = 1, (nYears)
@@ -1157,7 +1160,7 @@ endif
 ! ASSORTMENTS: SETTINGS
 !jhassort will be included as parameters/input making this obsolete
 ! ! switch between generic/simple (1), complex/taper+qred assortments (2), and potential assortments for every year (3; invokes 2 as well, which in the case of harvests being conducted override the potentials)
- assortType = INT(3)
+ assortType = INT(1)
 !
 !ratio of stumps extracted if they are collected (stumpsampled=T)
 stumprecoveryrate = 0.9
@@ -1180,10 +1183,13 @@ mkta = 5
 !/jh end assortment settings
 !jh POTENTIAL ASSORTMENTS (for every year)
 ! in the case of harvests being conducted, these overwrite the potentials (assorttype=3))
+open(1,file="cpreb_l1186.txt") !abug
+
 if (assortType==3) then
- include 'assort_potential.h'
+ !include 'assort_potential.h'
 endif !assorttype==3
 !/jh
+open(1,file="cpreb_l1192.txt") !abug
 
 
   !Perform user defined thinning or defoliation events for this time period
