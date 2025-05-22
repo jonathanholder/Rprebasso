@@ -29,9 +29,20 @@ if(assortType>1) then ! between generic (1) / advanced assortments (2)
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
 
+if(n_harvested<0.1) THEN !abug trying to get rid of xy e-312 values in energywood output for empty layers, maybe these create issues
+  d_harvested = 0.
+  h_harvested = 0.
+  v_harvested = 0.
+  n_harvested = 0.
+  felled_branch = 0.
+  felled_croot = 0.
+  stem_assort(:) = 0.
+else
+  ! assort subroutine ! now only invoked if stand is not regenerating (n_harvested >0.1)
+
 call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_assort, INT(mkta), &
             INT(siteType), INT(peat), lat, lon, alt, ets, age)
-
+!endif !(n_harvested) moved after harvest residue collection, that is only necessary if the layer has been clearcut
 ! ENERGYWOOD & LITTER
   if(energyCut==1.) then
   ! LITTER
@@ -53,8 +64,8 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
     turnover_cw +&                                                      ! cwoody litter
     stem_assort(5)*par_rhow
     ! ENERGY WOOD COLLECTION = 0
-    energyWood(year,ij,6) = 0 ! energywood total // ADD STUMP, BRANCHES TO THIS !!
-    energyWood(year,ij,5) = 0 ! energywood from roundwood (used to meet harvest demand)
+    energyWood(year,ij,6) = 0. ! energywood total // ADD STUMP, BRANCHES TO THIS !!
+    energyWood(year,ij,5) = 0. ! energywood from roundwood (used to meet harvest demand)
   endif !energycut
 
   !###### STUMP COLLECTION ####################
@@ -77,6 +88,7 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
       S_wood = S_wood + stem_assort(2)*par_rhow + felled_croot*0.17 !note: biomass
       S_branch = S_branch + felled_croot*0.83 !note: biomass
     endif !stumps
+endif !(n_harvested >0.1)
 
    !###### Fill rest of energyWood array ######
    energyWood(year,ij,2) = stem_assort(1) ! total roundwood
@@ -126,9 +138,9 @@ else if(assortType==INT(1)) then
 energyWood(year,ij,2) = v_harvested*harvRatio          ! total roundwood
 energyWood(year,ij,3) = v_harvested*harvRatio*0.5          ! NOTE: dummy, so the Vharvested allocation works
 energyWood(year,ij,4) = v_harvested*harvRatio*0.5          !
-energyWood(year,ij,8) = 0              ! stump (100% abg, partially included in energywood if collected)
-energyWood(year,ij,13) = 0  ! total stemwood according to Laasasenaho taper function
-energyWood(year,ij,7) = 0                          ! energywood from stumps (not applicable in thinnings)
+energyWood(year,ij,8) = 0.              ! stump (100% abg, partially included in energywood if collected)
+energyWood(year,ij,13) = 0.  ! total stemwood according to Laasasenaho taper function
+energyWood(year,ij,7) = 0.                          ! energywood from stumps (not applicable in thinnings)
 energyWood(year,ij,1) = v_harvested
 energyWood(year,ij,9) = n_harvested
 energyWood(year,ij,10) = d_harvested

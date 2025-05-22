@@ -10,6 +10,9 @@
 !   In the case of non-random thinnings (below/above), Prebas output uses the pre-thinning mean values
 !   --> recalculate from remaining and pre-harvest means
 
+
+if(Nold>0.1) then !excluding empty layers to avoid crashing due to (suspected) /0
+
 ! DBH of removed trees from removed ba and n
 d_harvested = sqrt((stand_tot(13)-BA)/(stand_tot(17)-N)/pi)*2*100
 
@@ -84,6 +87,25 @@ if(assortType>1) then ! between generic (1) / advanced assortments (2)
         energyWood(year,ij,6) = 0. ! total energywood
         energyWood(year,ij,5) = 0. ! energywood from roundwood (used to meet harvest demand)
    endif !energycut
+
+else !(Nold>0.1) to exclude empty layers, here: empty layers 
+
+  d_harvested = 0.
+  h_harvested = 0.
+  v_harvested = 0.
+  n_harvested = 0.
+  felled_branch = 0.
+  felled_croot = 0.
+  stem_assort(:) = 0.
+
+endif !(Nold>0.1) to exclude empty layers
+
+
+
+
+
+
+
 
 !# Filling rest of energyWood array ######
     energyWood(year,ij,2) = stem_assort(1)              ! total roundwood

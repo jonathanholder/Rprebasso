@@ -1249,7 +1249,7 @@ IF (thinning(countThinning,6) < STAND_tot(13)) siteInfoDist(2) = 0 !wdimpl, rese
   !jh ASSORTMENTS: thinnings
   ! ASSORTMENT CALCULATIONS
   include 'assort_thin.h'
-  energyWood(year,ij,15) = 1252 !marker for (approximate) line for troubleshooting (formerly 1014, 1108)
+  energyWood(year,ij,15) = 1252. !marker for (approximate) line for troubleshooting (formerly 1014, 1108)
   !/jh END ASSORTMENTS: thinnings
   !energyCut
      STAND(26) = S_fol
@@ -1389,7 +1389,8 @@ IF (thinning(countThinning,6) < STAND_tot(13)) siteInfoDist(2) = 0 !wdimpl, rese
   !// END OUTCOMMENTED BIT
   !jh ASSORTMENTS: thinnings
   include 'assort_thin.h'
-  energyWood(year,ij,15) = 1392 !marker for (approximate) line for troubleshooting; formerly 1219, 1127
+  energyWood(year,ij,15) = 1392.
+   !marker for (approximate) line for troubleshooting; formerly 1219, 1127
   !/jh
   !energyCut
 ! !! calculate litter including residuals from thinned trees
@@ -1547,7 +1548,9 @@ if (ClCut > 0.5 .or. outdist(max(INT(year-1),1), 9) == 1.) then !outdist(,9): cc
    !/jh outcommented
    !jh ASSORTMENTS: CLEAR CUTS (oldLayer=T)
    include 'assort_cc.h'
-   energyWood(year,ij,15) = 1560! formerly 1391. 1278
+   energyWood(year,ij,15) = 1560.
+
+   ! formerly 1391. 1278
 
   !energyCut
     stand_all(2,ij) = 0. !!newX

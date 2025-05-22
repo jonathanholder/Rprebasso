@@ -15,12 +15,19 @@ felled_croot = STAND(32) !NOTE: biomass!
 turnover_fw = STAND(28)  !NOTE: biomass!
 turnover_cw = STAND(29)  !NOTE: biomass!
 
-
-
-! assort subroutine
+if(n_harvested<0.1) THEN !abug trying to get rid of xy e-312 values in energywood output for empty layers, maybe these create issues
+  d_harvested = 0.
+  h_harvested = 0.
+  v_harvested = 0.
+  n_harvested = 0.
+  felled_branch = 0.
+  felled_croot = 0.
+  stem_assort(:) = 0.
+else
+! assort subroutine ! now only invoked if stand is not regenerating (n_harvested >0.1)
 call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_assort, INT(mkta), &
             INT(siteType), INT(peat), lat, lon, alt, ets, age)
-
+endif
 
   ! ENERGY WOOD COLLECTION
       energyWood(year,ij,6) = (stem_assort(5) + &! energywood total: stem+branches
@@ -31,7 +38,7 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
   !###### STUMP COLLECTION ####################
   ! simplified version, calculate potential stumps for all species, but oinly on somewhat fertile stands
   ! NOTE: keep stumps separate from potential total energywood, as this might distort interpretation at fist glance...
-    if(siteType<5.) then ! stump removal: allocate to energywood and/or litter
+    if(siteType<5. .and. n_harvested>0.) then ! stump removal: allocate to energywood and/or litter
   !     call stumpsample(pharv(3,species), stumpsampled) ! sampling with stumpratio as probability
   !     if(stumpsampled==1) then !if stumps are collected
         energyWood(year,ij,7) = (stem_assort(2) + felled_croot*0.3/par_rhow)*stumprecoveryrate !note: volume

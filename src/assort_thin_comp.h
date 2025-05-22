@@ -61,8 +61,8 @@ else !NO ENERGYCUT; stemwood, branches, coarse roots
     felled_croot*0.17+ &
     stem_assort(2)*par_rhow ! abg stump (stemwood)
 ! ENERGY WOOD COLLECTION = 0
-  multiWood(siteX,ij,ijj,6) = 0 ! energywood total !!
-  multiWood(siteX,ij,ijj,5) = 0 ! energywood from roundwood (used to meet harvest demand)
+  multiWood(siteX,ij,ijj,6) = 0. ! energywood total !!
+  multiWood(siteX,ij,ijj,5) = 0. ! energywood from roundwood (used to meet harvest demand)
   endif !energycut
 
    !###### Fill rest of energyWood array ######

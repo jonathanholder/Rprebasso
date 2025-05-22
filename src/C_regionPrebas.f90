@@ -95,7 +95,7 @@ real (kind=8) :: minFapar,fAparFactor=0.9
   integer, intent(inout) :: prebasFlags(9)
 
 
-  multiWood(1,1,1,1) = 4242.
+  !multiWood(1,1,1,1) = 4242.
   !jhup ASSORTMENTS: SETTINGS
   ! switch between generic/simple (1) and complex/taper+qred assortments (2)
   assortType = INT(3)
