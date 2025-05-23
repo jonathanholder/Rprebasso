@@ -163,7 +163,7 @@ integer, intent(inout) :: prebasFlags(9)
   real (kind=8), dimension(5):: vols_raw! assort() output list of volumes: roundwood, stump ratio, sawn ratio, pulp ratio, energy ratio (tops) (all of stemwood) // can be removed in final version
   real (kind=8) :: h_harvested, d_harvested, v_harvested, n_harvested, qred_modifier, hc_rem, lc_rem, A_rem, stumpratio
   real (kind=8) :: felled_branch, felled_croot, turnover_fw, turnover_cw
-  integer :: assortType ! 1 = original roundwood/energywood assortments; 2 = taper/qred assortments
+  integer :: assortType ! 1 = original roundwood/energywood assortments; 2 = taper/qred assortments; 3 = 2 + potential/standing assortments; 4 = potentials only
   real (kind=8) :: stumprecoveryrate ! share of stumps extracted (in the case of stump removal)
   real (kind=8), dimension(4,3):: pharv ! parameters for harvesting/assortments; 1=harvestRatio, 2=energyRatio, 3=stumpRatio, 4=qred_modifier
   integer :: stumpsampled !/ 0/1 stump removal (based on stumpratio probability)
@@ -172,6 +172,9 @@ integer, intent(inout) :: prebasFlags(9)
   REAL (kind=8) :: lat, lon, alt !
   INTEGER :: mkta, peat ! 1 = pine, 2 = spruce, 3 = birch + broad
 
+  logical :: debugging !default: FALSE (below). TRUE to switch off several code blocks at once. not transferred btw prebas and regionprebas, set individually.
+
+  debugging = .TRUE.
 
 !!! 'un-vectorise' flags, fvec !wdimpl
 etmodel = int(prebasFlags(1))
@@ -1156,7 +1159,7 @@ endif
 ! ASSORTMENTS: SETTINGS
 !jhassort will be included as parameters/input making this obsolete
 ! ! switch between generic/simple (1), complex/taper+qred assortments (2), and potential assortments for every year (3; invokes 2 as well, which in the case of harvests being conducted override the potentials)
- assortType = INT(3)
+ assortType = INT(4)
 !
 !ratio of stumps extracted if they are collected (stumpsampled=T)
 stumprecoveryrate = 0.9
@@ -1168,6 +1171,10 @@ stumprecoveryrate = 0.9
     pharv(3,2) = 1. !stumpRatio spruce
     pharv(3,3) = 0. !stumpRatio birch
     pharv(4,:) = 1.0 !qred_modifier
+
+harvratio = 0.9 !safety measure to not leave it uninitialised
+energyratio = 0.7 !safety measure to not leave it uninitialised
+
 !quality reduction
 !SUBROUTINE qred_f(mkta, sitetype, peat, lat, lon, alt, spec, d, age, ets, coef, qredfact) !n
 !NOTE: dummies for qred inputs, need to get those externally later on
@@ -1179,8 +1186,12 @@ mkta = 5
 !/jh end assortment settings
 !jh POTENTIAL ASSORTMENTS (for every year)
 ! in the case of harvests being conducted, these overwrite the potentials (assorttype=3))
-if (assortType==3) then
- include 'assort_potential.h'
+if (assortType==3 .or. assortType==4) then
+  ! open(1,file="includepot_year.layer.txt")! abug awrite
+  ! write(1,*) year, ij
+  ! close(1)
+
+! include 'assort_potential.h'
 endif !assorttype==3
 !/jh
 

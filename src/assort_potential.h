@@ -1,3 +1,5 @@
+if(debugging .eqv. .FALSE.) then !deactivate for debugging
+
 !  energyWood(year,ij,2)
 species = STAND(4)
 par_rhow = pCrobas(2,species)
@@ -62,3 +64,4 @@ endif
    energyWood(year,ij,11) = h_harvested
    energyWood(year,ij,12) = stem_assort(8) ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
    energyWood(year,ij,14) = 99.
+endif !debugging at beginning of .h script

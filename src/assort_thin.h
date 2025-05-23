@@ -1,4 +1,5 @@
 
+if(debugging .eqv. .FALSE.) then !deactivate for debugging
 
 
 ! set fine and coarse woody litter to 0 (turnover still included by stand_all(28/29))
@@ -40,7 +41,7 @@ turnover_cw = stand_all(29,ij)  !NOTE: biomass!
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
 ! # NOTE: qred currently fixed to 0.3
-if(assortType>1) then ! between generic (1) / advanced assortments (2)
+if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assortments (2)
 
 ! ###### HARVESTED ASSORTMENTs ROUTINE ###
 ! ###### THINNINGS ###
@@ -88,7 +89,7 @@ if(assortType>1) then ! between generic (1) / advanced assortments (2)
         energyWood(year,ij,5) = 0. ! energywood from roundwood (used to meet harvest demand)
    endif !energycut
 
-else !(Nold>0.1) to exclude empty layers, here: empty layers 
+else !(Nold>0.1) to exclude empty layers, here: empty layers
 
   d_harvested = 0.
   h_harvested = 0.
@@ -174,3 +175,4 @@ else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2
 
 
 endif !simple assortments
+endif !debugging at beginning of .h script

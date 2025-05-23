@@ -93,12 +93,17 @@ real (kind=8) :: minFapar,fAparFactor=0.9
   REAL (kind=8) :: ets
 
   integer, intent(inout) :: prebasFlags(9)
+  logical :: debugging !default: FALSE (below). TRUE to switch off several code blocks at once. not transferred btw prebas and regionprebas, set individually.
 
-
+  debugging = .TRUE.
   !multiWood(1,1,1,1) = 4242.
   !jhup ASSORTMENTS: SETTINGS
-  ! switch between generic/simple (1) and complex/taper+qred assortments (2)
-  assortType = INT(3)
+  ! switch between
+  !-- (1) generic/simple
+  !-- (2) complex/taper+qred assortments (2)
+  !-- (3) 2 + potential potential (standing) + realised (harvested) simultaneously
+  !-- (4) potential only
+  assortType = INT(4)
 
   !ratio of stumps extracted if they are collected/stumpsampled=T
   stumprecoveryrate = 0.9 ! NOTE: != stumpratio (the ratio of stump harvesting conducted if prerequisites are met)
@@ -110,6 +115,9 @@ real (kind=8) :: minFapar,fAparFactor=0.9
       pharv(3,2) = 0.99 !stumpRatio spruce
       pharv(3,3) = 0. !stumpRatio birch
       pharv(4,:) = 1.0 !qred_modifier
+      harvratio = 0.9 ! to make sure this is not left uninitialised
+      energyratio = 0.7 ! to make sure this is not left uninitialised
+
 
   !quality reduction parameters
   !NOTE: dummies for qred inputs, need to get those externally later on
@@ -141,7 +149,7 @@ if(prebasFlags(6)==1 .or. prebasFlags(6)==12 .or. prebasFlags(6)==13 .or. prebas
 yearXrepl = 0.
 soilC = soilCinOut
 soilCtot = soilCtotInOut
-multiWood = 0.
+multiWood(:,:,:,:) = 0.
 cuttingArea(:,2) = 0.
 cuttingArea(:,4) = 0.
 cuttingArea(:,6) = 0.
@@ -447,6 +455,11 @@ endif
   if(ij>1) then
    output(1,46,1,2) = multiOut(i,(ij-1),46,1,2) !!SMI previous year, used in bark beetle intensity calculation
   endif
+  !
+  ! open(2,file="callprebas_site.year.txt") !abug awrite
+  ! write(2,*) i, ij
+  ! close(2)
+
 
   call prebas(1,nLayers(i),allSP,siteInfo(i,:),pCrobas,initVar(i,:,1:nLayers(i)),&
     thinningX(1:az,:),output(1,:,1:nLayers(i),:),az,maxYearSite,fAPAR(i,ij),initClearcut(i,:),&
@@ -537,7 +550,7 @@ endif
     cuttingArea(ij,6) = cuttingArea(ij,6) + areas(i)
   endif
   if(multiOut(i,ij,1,1,2) == 3.) then
-  cuttingArea(ij,6) = cuttingArea(ij,7) + areas(i) !jhassort record thinnings
+  cuttingArea(ij,7) = cuttingArea(ij,7) + areas(i) !jhassort record thinnings
 endif
 
   initVar(i,1,1:nLayers(i)) = output(1,4,1:nLayers(i),1)
@@ -763,7 +776,7 @@ endif
   ! multiOut(siteX,ij,37,2,1)
 ! if(siteInfo(siteX,1) == 454702.) write(2,*) "remaining 3", multiOut(siteX,ij,11,3,1), multiOut(siteX,ij,13,3,1), &
   ! multiOut(siteX,ij,37,3,1)
-    siteInfoDist(siteX,2) = 0 ! restart time since thinning // TO BE TESTED!! !wdimpl
+    siteInfoDist(siteX,2) = 0. ! restart time since thinning // TO BE TESTED!! !wdimpl
 
     !jhassort: below moved to assort_thin_comp
     ! roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)* thinFact *areas(siteX) !!energCuts
@@ -1180,8 +1193,22 @@ endif !roundWood < HarvLim .and. HarvLim /= 0.
     endif
 
     enddo !ijj
+    ! open(3,file="yearloop_end.txt")
+    ! write(3,*) ij
+    ! close(3)
+
   enddo
+  ! open(4,file="siteloop_end.txt")
+  ! write(4,*) i
+  ! close(4)
+
+
  enddo
+
+ !
+ !
+ ! open(5,file="presoilsave.txt")
+ ! close(5)
   ! close(1)
   ! close(2)
   ! close(3)
@@ -1190,7 +1217,8 @@ soilCtotInOut = soilCtot
     ! open(1,file="test1.txt")
   ! write(1,*) i,ij,ijj,nSites, "end"
   ! close(1)
-
+  ! open(6,file="postsoilsave.txt")
+  ! close(6)
 end subroutine
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

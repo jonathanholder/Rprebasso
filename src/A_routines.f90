@@ -2670,6 +2670,8 @@ SUBROUTINE assort(spec, d, h, v, pharv, stem_assort, mkta, sitetype, peat, lat, 
 !SUBROUTINE qred_f(mkta, sitetype, peat, lat, lon, alt, spec, d, age, ets, coef, qredfact) !n
   !qred input
 !#####
+
+
         vols_raw = 0.
         harvRatio = pharv(1, spec)
 ! both taper_assort and qred_f produce NaN values at d, h at 0 or very low values; set h and d to 1 in these cases

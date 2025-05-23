@@ -1,4 +1,5 @@
 
+if(debugging .eqv. .FALSE.) then !deactivate for debugging
 
 
 ! set fine and coarse woody litter to 0 (turnover still included by stand_all(28/29))
@@ -20,8 +21,7 @@ felled_croot = stand_all(32,ij) !NOTE: biomass!
 turnover_fw = stand_all(28,ij)  !NOTE: biomass!
 turnover_cw = stand_all(29,ij)  !NOTE: biomass!
 
-if(assortType>1) then ! between generic (1) / advanced assortments (2)
-
+if(assortType==2 .or. assortType==3) then
 ! ###### HARVESTED ASSORTMENTs ROUTINE ###
 ! ###### CLEARCUTS ###
 ! # including harvest residue allocation
@@ -152,3 +152,4 @@ energyWood(year,ij,14) = 4.                    ! dummy for variable of interest
  stand_all(37,ij) = v_harvested*harvRatio
 
 endif !simple assortments
+endif !debugging at beginning of .h script

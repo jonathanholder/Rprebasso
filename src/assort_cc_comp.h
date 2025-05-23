@@ -1,3 +1,4 @@
+if(debugging .eqv. .FALSE.) then !deactivate for debugging
 ! externalised:
 ! COMPENSATION CLEAR CUTS
 ! harvesting, litter, assortment processing
@@ -44,8 +45,8 @@ ets = multiOut(siteX,ij,5,ijj,1)
 ! # stem partitioning based on Laasasenaho taper functions
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
-if (assortType > 1) then ! between generic (1) / advanced assortments (2) / potentials for every year (3; uses 2 for actual harvests)
-  if(assortType==3 .and. multiWood(siteX,ij,ijj,14) == 99.) then !potentials=T and no regular mgmt
+if(assortType==2 .or. assortType==3) then
+    if(assortType==3 .and. multiWood(siteX,ij,ijj,14) == 99.) then !potentials=T and no regular mgmt
     multiWood(siteX,ij,ijj,1:13) = 0. ! set potential to 0, then the comp cc can be added without double-accounting.
   endif
   ! above: if potential assortments are calculated, set those to zero (otherwise the comp thinning is added to the potential (standing) assortments))
@@ -284,3 +285,4 @@ multiOut(siteX,ij,23:25,ijj,1) = 0.
 multiOut(siteX,ij,30:36,ijj,1) = 0.
 multiOut(siteX,ij,43,ijj,1) = 0.
 multiOut(siteX,ij,47:nVar,ijj,1) = 0.
+endif !debugging at beginning of .h script
