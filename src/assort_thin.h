@@ -19,12 +19,21 @@ Hc_rem = (stand_tot(48)-W_c)/(par_rhow * A_rem * (Nold-N))!sapwood stem below Cr
 Lc_rem = (stand_tot(49)-W_s)/(par_rhow * A_rem * (Nold-N) * par_betas)! sapwood of stem within crown
 h_harvested = Hc_rem + Lc_rem
 
+! bugfixing
+            energyWood(year,ij,17,1) = h_harvested            !bugfixing
+
+
+if(h_harvested /= h_harvested) THEN ! sometimes NaN, leads to slightly negative v_harvested...
+        h_harvested = 1.31
+      endif
+
 ! additional variables
 species = int(max(1.,stand(4)))
 harvRatio = pharv(1,species)
 energyRatio = pharv(2,species)
 stumpRatio = pharv(3,species)
-v_harvested = stand_tot(30)-V
+v_harvested = max(0., (stand_tot(30)-V)) ! negative v_harv if harvest occurs in the same year as a layer is introduced (0-V). set to 0, V is negligible.
+energyWood(year,ij,16,1) = v_harvested          !bugfixing
 n_harvested = Nold-N
 felled_branch = stand_all(24,ij)- W_branch + stand_all(51,ij)-Wdb !NOTE: biomass!
 felled_croot = stand_all(32,ij) - W_croot !NOTE: biomass!
@@ -37,7 +46,7 @@ turnover_cw = stand_all(29,ij)  !NOTE: biomass!
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
 ! # NOTE: qred currently fixed to 0.3
-if(assortType>1) then ! between generic (1) / advanced assortments (2)
+if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assortments (2)
 
 ! ###### HARVESTED ASSORTMENTs ROUTINE ###
 ! ###### THINNINGS ###
@@ -66,9 +75,9 @@ if(assortType>1) then ! between generic (1) / advanced assortments (2)
         stem_assort(2)*par_rhow+ &              !abg stump (not colletced in thinnings)                                ! abg stump
         stem_assort(5)*par_rhow*(1-energyRatio)                                  ! potential energywood from stemwood
   ! ENERGY WOOD COLLECTION
-      energyWood(year,ij,6) = (stem_assort(5) + &! energywood total: stem+branches
+      energyWood(year,ij,6,1) = (stem_assort(5) + &! energywood total: stem+branches
         felled_branch/par_rhow)*energyRatio
-      energyWood(year,ij,5) = stem_assort(6)*energyRatio  ! energywood from roundwood (to be used to meet harvest demand)
+      energyWood(year,ij,5,1) = stem_assort(6)*energyRatio  ! energywood from roundwood (to be used to meet harvest demand)
 
    else ! NO ENERGYCUT
 ! LITTER
@@ -81,25 +90,25 @@ if(assortType>1) then ! between generic (1) / advanced assortments (2)
         stem_assort(2)*par_rhow+ &                                               ! abg stump
         stem_assort(5)*par_rhow
   ! ENERGY WOOD COLLECTION = 0
-        energyWood(year,ij,6) = 0. ! total energywood
-        energyWood(year,ij,5) = 0. ! energywood from roundwood (used to meet harvest demand)
+        energyWood(year,ij,6,1) = 0. ! total energywood
+        energyWood(year,ij,5,1) = 0. ! energywood from roundwood (used to meet harvest demand)
    endif !energycut
 
 !# Filling rest of energyWood array ######
-    energyWood(year,ij,2) = stem_assort(1)              ! total roundwood
-    energyWood(year,ij,3) = stem_assort(3)              ! sawnwood (quality reduced)
-    energyWood(year,ij,4) = stem_assort(4)              ! pulpwood (including qred sawn, -harvestRatio)
-    !energyWood(year,ij,6) = stem_assort(5)*energyRatio ! energywood total / done above
-    !energyWood(year,ij,5) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand) / done above
-    energyWood(year,ij,8) = stem_assort(2)              ! stump (100% abg, partially included in energywood if collected)
-    energyWood(year,ij,13) = stem_assort(7)*n_harvested  ! total stemwood according to Laasasenaho taper function
-    energyWood(year,ij,7) = 0                          ! energywood from stumps (not applicable in thinnings)
-    energyWood(year,ij,1) = v_harvested
-    energyWood(year,ij,9) = n_harvested
-    energyWood(year,ij,10) = d_harvested
-    energyWood(year,ij,11) = h_harvested
-    energyWood(year,ij,12) = stem_assort(8)              ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
-    energyWood(year,ij,14) = thinningType                   ! dummy for variable of interest
+    energyWood(year,ij,2,1) = stem_assort(1)              ! total roundwood
+    energyWood(year,ij,3,1) = stem_assort(3)              ! sawnwood (quality reduced)
+    energyWood(year,ij,4,1) = stem_assort(4)              ! pulpwood (including qred sawn, -harvestRatio)
+    !energyWood(year,ij,6,1) = stem_assort(5)*energyRatio ! energywood total / done above
+    !energyWood(year,ij,5,1) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand) / done above
+    energyWood(year,ij,8,1) = stem_assort(2)              ! stump (100% abg, partially included in energywood if collected)
+    energyWood(year,ij,13,1) = stem_assort(7)*n_harvested  ! total stemwood according to Laasasenaho taper function
+    energyWood(year,ij,7,1) = 0                          ! energywood from stumps (not applicable in thinnings)
+    energyWood(year,ij,1,1) = v_harvested
+    energyWood(year,ij,9,1) = n_harvested
+    energyWood(year,ij,10,1) = d_harvested
+    energyWood(year,ij,11,1) = h_harvested
+    energyWood(year,ij,12,1) = stem_assort(8)              ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
+    energyWood(year,ij,14,1) = thinningType                   ! dummy for variable of interest
 
     stand_all(37,ij) = stem_assort(3) + stem_assort(4)
 
@@ -110,10 +119,10 @@ else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2
 
    if(energyCut==1.) then
 ! energywood collection
-      energyWood(year,ij,6) = energyWood(year,ij,6) + ((felled_branch + &
+      energyWood(year,ij,6,1) = energyWood(year,ij,6,1) + ((felled_branch + &
       felled_croot * 0.3)/par_rhow + &
       v_harvested * (1-harvRatio)) * energyRatio
-      energyWood(year,ij,5) = v_harvested * (1-harvRatio) * energyRatio
+      energyWood(year,ij,5,1) = v_harvested * (1-harvRatio) * energyRatio
 ! litter
       S_branch = max(0.,(S_branch + felled_branch * (1-energyRatio) +  &
       (0.3 * (1-energyRatio)+0.7) * felled_croot *0.83))
@@ -122,8 +131,8 @@ else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2
       v_harvested*par_rhow* (1-harvRatio)* (1-energyRatio)
 
    else ! no energywood collection
-      energyWood(year,ij,5) = 0.
-      energyWood(year,ij,6) = 0.
+      energyWood(year,ij,5,1) = 0.
+      energyWood(year,ij,6,1) = 0.
     !litter
       S_branch = max(0.,(S_branch + turnover_fw + felled_branch  +  &
        felled_croot *0.83))
@@ -132,21 +141,21 @@ else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2
    endif !energywood collection T/F
 
 !# Filling rest of energyWood array ######
-  energyWood(year,ij,2) = v_harvested*harvRatio          ! total roundwood
-  energyWood(year,ij,3) = v_harvested*harvRatio*0.5          ! NOTE: dummy, so the Vharvested allocation works
-  energyWood(year,ij,4) = v_harvested*harvRatio*0.5
+  energyWood(year,ij,2,1) = v_harvested*harvRatio          ! total roundwood
+  energyWood(year,ij,3,1) = v_harvested*harvRatio*0.5          ! NOTE: dummy, so the Vharvested allocation works
+  energyWood(year,ij,4,1) = v_harvested*harvRatio*0.5
 
-  !energyWood(year,ij,6) = energyWood(year,ij,1)! energywood total
-  !energyWood(year,ij,5) = v_harvested * (1-harvRatio) * energyRatio ! energywood from STEMwood (used to meet harvest demand
-  energyWood(year,ij,8) = 0.              ! stump (100% abg, partially included in energywood if collected)
-  energyWood(year,ij,13) = 0.  ! total stemwood according to Laasasenaho taper function
-  energyWood(year,ij,7) = 0.                          ! energywood from stumps (not applicable in thinnings)
-  energyWood(year,ij,1) = v_harvested
-  energyWood(year,ij,9) = n_harvested
-  energyWood(year,ij,10) = d_harvested
-  energyWood(year,ij,11) = h_harvested
-  energyWood(year,ij,12) = 0.           ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
-  energyWood(year,ij,14) = thinningType                 ! dummy for variable of interest
+  !energyWood(year,ij,6,1) = energyWood(year,ij,1,1)! energywood total
+  !energyWood(year,ij,5,1) = v_harvested * (1-harvRatio) * energyRatio ! energywood from STEMwood (used to meet harvest demand
+  energyWood(year,ij,8,1) = 0.              ! stump (100% abg, partially included in energywood if collected)
+  energyWood(year,ij,13,1) = 0.  ! total stemwood according to Laasasenaho taper function
+  energyWood(year,ij,7,1) = 0.                          ! energywood from stumps (not applicable in thinnings)
+  energyWood(year,ij,1,1) = v_harvested
+  energyWood(year,ij,9,1) = n_harvested
+  energyWood(year,ij,10,1) = d_harvested
+  energyWood(year,ij,11,1) = h_harvested
+  energyWood(year,ij,12,1) = 0.           ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
+  energyWood(year,ij,14,1) = thinningType                 ! dummy for variable of interest
 
   stand_all(37,ij) = v_harvested*harvRatio
 

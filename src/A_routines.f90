@@ -2674,8 +2674,13 @@ SUBROUTINE assort(spec, d, h, v, pharv, stem_assort, mkta, sitetype, peat, lat, 
         harvRatio = pharv(1, spec)
 ! both taper_assort and qred_f produce NaN values at d, h at 0 or very low values; set h and d to 1 in these cases
 ! this is in practice only active in potential assortments (assortType=3)
-        dx = max(d, 1.)
+
+
+				dx = max(d, 1.)
         hx = max(h, 1.)
+				if(hx /= hx) THEN ! sometimes NaN, leads to slightly negative v_harvested...
+	        hx = 1.31
+				endif
         CALL taper_assort(spec, dx, hx, vols_raw) !n
         CALL qred_f(mkta, sitetype, peat, lat, lon, alt, spec, dx, age, ets, qredfact)
         !qredfact = 0.3

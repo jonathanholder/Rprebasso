@@ -229,6 +229,84 @@ if(clCut<0.) then !blocking mgmt reactions in sites indicated as preservation/un
   outDist(year,7:9) = 0.
 endif
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! ASSORTMENTS OF DISTURBED TREES !!!
+if(.TRUE.) then
+if(outDist(year,7) == 1. ) then
+  if(assorttype==2 .or. assorttype==3) then
+
+
+    open(1,file="wdist_assort.txt")
+      close(1)
+
+do layer = 1, nLayers
+  if (wriskLayers(layer,4)>0.) then !layer-level wind disturbed volume, assortments only invoked if layer is disturbed...
+      ! initialising vars required for assortmetns
+      species = outt(4,layer,1)
+      d_harvested = outt(11,layer,1)
+      h_harvested = outt(12,layer,1)
+      if(h_harvested /= h_harvested) THEN ! sometimes NaN, leads to slightly negative v_harvested...
+        h_harvested = 1.31
+      endif
+      v_harvested = wriskLayers(layer,4)
+      if(outt(30,layer,1)>0.) then !in case the whole layer has been disturbed (divby0 danger)
+       n_harvested = v_harvested/outt(30,layer,1)
+      else
+       n_harvested = 999.
+      endif
+      stem_assort(:) = 0.
+      age = outt(7,layer,1)
+      ets = outt(5,1,1)
+      call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_assort, INT(mkta), &
+                  INT(siteType), INT(peat), lat, lon, alt, ets, age)
+
+
+        energyWood(year,layer,2,3) = stem_assort(1)              ! total roundwood
+        energyWood(year,layer,3,3) = stem_assort(3)              ! sawnwood (quality reduced)
+        energyWood(year,layer,4,3) = stem_assort(4)              ! pulpwood (including qred sawn, -harvestRatio)
+        energyWood(year,layer,6,1) = stem_assort(5)*energyRatio ! energywood total / done above
+        energyWood(year,layer,5,1) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand) / done above
+        energyWood(year,layer,8,3) = stem_assort(2)              ! stump (100% abg, partially included in energywood if collected)
+        energyWood(year,layer,13,3) = stem_assort(7)!*n_harvested  ! total stemwood according to Laasasenaho taper function!n_harvested not really available ere...
+        energyWood(year,layer,7,3) = 0.                        ! energywood from stumps (not applicable in thinnings)
+        energyWood(year,layer,1,3) = v_harvested
+        energyWood(year,layer,9,3) = n_harvested
+        energyWood(year,layer,10,3) = d_harvested
+        energyWood(year,layer,11,3) = h_harvested
+        energyWood(year,layer,12,3) = stem_assort(8)              ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
+        energyWood(year,layer,14,3) = 42.                   ! dummy for variable of interest
+
+        ! checking inputs to asort subroutine (deactivate that then)
+        ! energyWood(year,layer,1,3) = REAL(species)              ! total roundwood
+        ! energyWood(year,layer,2,3) = REAL(n_harvested)              ! total roundwood
+        ! energyWood(year,layer,3,3) = REAL(d_harvested)              ! total roundwood
+        ! energyWood(year,layer,4,3) = REAL(h_harvested)              ! total roundwood
+        ! energyWood(year,layer,5,3) = REAL(v_harvested)              ! total roundwood
+        ! energyWood(year,layer,6,3) = REAL(age)              ! total roundwood
+        ! energyWood(year,layer,7,3) = REAL(mkta)              ! total roundwood
+        ! energyWood(year,layer,8,3) = REAL(siteType)              ! total roundwood
+        ! energyWood(year,layer,9,3) = REAL(peat)              ! total roundwood
+        ! energyWood(year,layer,10,3) = REAL(lat)              ! total roundwood
+        ! energyWood(year,layer,11,3) = REAL(lon)              ! total roundwood
+        ! energyWood(year,layer,12,3) = REAL(ets)              ! total roundwood
+        ! energyWood(year,layer,13,3) = 99.       ! total roundwood
+        ! energyWood(year,layer,14,3) =    99.  ! total roundwood
+
+
+
+
+
+
+   endif !(wriskLayers(layer,4)>0.)
+    end do !layer = 1, nLayers
+  endif !(outDist(year,7) == 1. )
+endif !((assorttype==2 .or. assorttype==3))
+endif! (FALSE)
+!!! /// end ASSORTMENTS OF DISTURBED TREES !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 !!!! UPDATING STAND VARS !!!!
 ! based on Francesco's code, only inputs necessary: layer level killed BA & pHarvTrees
  ! if(.TRUE.) then !if XX everything is switch off for the moment !wdimp x1
@@ -255,11 +333,11 @@ endif
 
      ! perBAmort = 0.1
        ! write(1,*) "disturbance", year, pMort, perBAmort
-   do ij = 1 , nLayers     !loop Species xdo1
+   do layer = 1 , nLayers     !loop Species xdo1
 
-    BAmort = BAdist(ij)
+    BAmort = BAdist(layer)
     dN=0.d0
-    STAND=STAND_all(:,ij)
+    STAND=STAND_all(:,layer)
     species = int(stand(4))
     param = pCrobas(:,species)
     sitetype=STAND(3)
@@ -361,13 +439,13 @@ endif
 
 
     if(BAmort > 0.) then !check if mortality occurs UPDATE: only activated if there is no wind disturbance wdimp xif4
-!      if(BAmort(ij) > 0. .and. maxval(wriskLayers(:,1)) == 0) then !check if mortality occurs UPDATE: only activated if there is no wind disturbance wdimp
-      !dN = -Nold * (BAmort/(BA/BAr(ij)))
+!      if(BAmort(layer) > 0. .and. maxval(wriskLayers(:,1)) == 0) then !check if mortality occurs UPDATE: only activated if there is no wind disturbance wdimp
+      !dN = -Nold * (BAmort/(BA/BAr(layer)))
      dN = -Nold * (BAmort/BA)
 
     ! elseif(maxval(wriskLayers(:,1)) > 0) then !wdimp define dN based on layer-level disturbed ba
-    ! !  dN = -Nold * (BAmort/(BA/BAr(ij)))
-    !   dN = -Nold * (wriskLayers(ij,6)/BA) !disturbed layer ba/layer ba
+    ! !  dN = -Nold * (BAmort/(BA/BAr(layer)))
+    !   dN = -Nold * (wriskLayers(layer,6)/BA) !disturbed layer ba/layer ba
     else
       dN = 0.
     endif !xif4_end
@@ -426,12 +504,12 @@ endif
 !!!
 !! allocating salvage logging to current (regionPrebas harvlimit not met when site is checked or all mgmt switched off) or next year (some mgmt allowed / harvlimit exceeded)
 if(ClCut == 0. .and. defaultThin == 0.) then ! either mgmt switched off entirely or blocked due to harvest limit being met
-    !outt(42,ij,2) = outt(30,ij,2) + max((Vold-V)*pHarvTrees,0.)*harvRatio !salvnext save salvlogged layer-level vol here to be included in next year's harvest limit in regionPrebas (harvRatio otherwise applied when going from ,,30,,2 to ,,37,,1)
-    outt(42,ij,2) = max((Vold-V)*pHarvTrees,0.)*harvRatio !update replacing the above: outt(30,ij,2) shouldn't be included; in practice, this could carry over the year of disturbance salvage logging to the year AFTER the mgmt reaction... test!
+    !outt(42,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)*harvRatio !salvnext save salvlogged layer-level vol here to be included in next year's harvest limit in regionPrebas (harvRatio otherwise applied when going from ,,30,,2 to ,,37,,1)
+    outt(42,layer,2) = max((Vold-V)*pHarvTrees,0.)*harvRatio !update replacing the above: outt(30,layer,2) shouldn't be included; in practice, this could carry over the year of disturbance salvage logging to the year AFTER the mgmt reaction... test!
     ! cont.: by if condition, there can't be any harvests in this stand in this year anyway...
     outDist(year,10) = 2. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
 elseif(ClCut > 0. .or. defaultThin > 0.) then
-    outt(30,ij,2) = outt(30,ij,2) + max((Vold-V)*pHarvTrees,0.)
+    outt(30,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)
     pHarvTrees = 0
     outDist(year,10) = 1. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
 
@@ -451,7 +529,7 @@ elseif(ClCut > 0. .or. defaultThin > 0.) then
   endif !x5
 endif !
 !//activate
-    STAND_all(:,ij)=STAND
+    STAND_all(:,layer)=STAND
 endif
     end do !!!!!!!end loop layers xl1
  endif !bamort>0... x3

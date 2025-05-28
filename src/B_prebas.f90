@@ -67,7 +67,8 @@ REAL (kind=8):: BAdist(nLayers) !disturbed BA per layer
  real (kind=8), intent(inout) :: dailyPRELES((nYears*365), 3) ! GPP, ET, SW
  real (kind=8), intent(inout) :: initVar(7, nLayers), P0y(nYears,2), ETSy(nYears), initCLcutRatio(nLayers), ETSstart ! initCLcutRatio sets the initial layer compositions after clearcut
  real (kind=8), intent(inout) :: siteInfo(10)
- real (kind=8), intent(inout) :: output(nYears, nVar, nLayers, 2), energyWood(nYears, nLayers, 17) ! last dimension: 1 is for stand and 2 is for harvested sum of wood.  jhassort: increase n of vars
+ real (kind=8), intent(inout) :: output(nYears, nVar, nLayers, 2)  ! output: last dimension: 1 is for stand and 2 is for harvested sum of wood.
+ real (kind=8), intent(inout) :: energyWood(nYears, nLayers, 17,3) !jhassort: 17 vars for development of assortments, 4th dimension: 1 = realised/harvested assortments, 2 = potential/standing assortments, 3=assortments of salvage loggings. controlled by assorttype, currently internal/hardcoded switch.
  real (kind=8), intent(inout) :: soilCinOut(nYears, 5, 3, nLayers), soilCtotInOut(nYears) ! dimensions: nyears, AWENH, woody/fineWoody/foliage, layers
  real (kind=8), intent(inout) :: pYasso(35), weatherYasso(nYears,3), litterSize(3, nSp) ! litterSize dimensions: treeOrgans, species
 
@@ -1179,7 +1180,8 @@ mkta = 5
 !/jh end assortment settings
 !jh POTENTIAL ASSORTMENTS (for every year)
 ! in the case of harvests being conducted, these overwrite the potentials (assorttype=3))
-if (assortType==3) then
+
+if (assortType==3 .or. assortType==4) then
  include 'assort_potential.h'
 endif !assorttype==3
 !/jh
@@ -1249,7 +1251,7 @@ IF (thinning(countThinning,6) < STAND_tot(13)) siteInfoDist(2) = 0 !wdimpl, rese
   !jh ASSORTMENTS: thinnings
   ! ASSORTMENT CALCULATIONS
   include 'assort_thin.h'
-  energyWood(year,ij,15) = 1252 !marker for (approximate) line for troubleshooting (formerly 1014, 1108)
+  energyWood(year,ij,15,1) = 1252. !marker for (approximate) line for troubleshooting (formerly 1014, 1108)
   !/jh END ASSORTMENTS: thinnings
   !energyCut
      STAND(26) = S_fol
@@ -1389,7 +1391,7 @@ IF (thinning(countThinning,6) < STAND_tot(13)) siteInfoDist(2) = 0 !wdimpl, rese
   !// END OUTCOMMENTED BIT
   !jh ASSORTMENTS: thinnings
   include 'assort_thin.h'
-  energyWood(year,ij,15) = 1392 !marker for (approximate) line for troubleshooting; formerly 1219, 1127
+  energyWood(year,ij,15,1) = 1392. !marker for (approximate) line for troubleshooting; formerly 1219, 1127
   !/jh
   !energyCut
 ! !! calculate litter including residuals from thinned trees
@@ -1547,7 +1549,7 @@ if (ClCut > 0.5 .or. outdist(max(INT(year-1),1), 9) == 1.) then !outdist(,9): cc
    !/jh outcommented
    !jh ASSORTMENTS: CLEAR CUTS (oldLayer=T)
    include 'assort_cc.h'
-   energyWood(year,ij,15) = 1560! formerly 1391. 1278
+   energyWood(year,ij,15,1) = 1560.! formerly 1391. 1278
 
   !energyCut
     stand_all(2,ij) = 0. !!newX
@@ -1595,7 +1597,7 @@ if (ClCut > 0.5 .or. outdist(max(INT(year-1),1), 9) == 1.) then !outdist(,9): cc
        !/jh end outcommened
        !jh ASSORTMENTS: CLEAR CUTS (oldLayer=F)
      include 'assort_cc.h'
-     energyWood(year,ij,15) = 1527! formerly 1431, 1299
+     energyWood(year,ij,15,1) = 1527! formerly 1431, 1299
      !/jh
   !energyCut
     stand_all(2,ij) = 0. !!newX
@@ -1867,7 +1869,7 @@ if(defaultThin == 1.) then
  !/jh outcommented
    !jhassort ASSORTMENTS: thinnings
    include 'assort_thin.h'
-   energyWood(year,ij,15) = 1870! formerly 1570 1617
+   energyWood(year,ij,15,1) = 1870! formerly 1570 1617
    ! end assortments (thin)
  !! ATTENTION: below, all outt()+ aggregates are new/not existent in assortment implemented version
  !! meaning outt=out+stand... has been outt=stands

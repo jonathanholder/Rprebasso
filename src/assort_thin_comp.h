@@ -25,7 +25,7 @@ ets = multiOut(siteX,ij,5,ijj,1)
 ! # stem partitioning based on Laasasenaho taper functions
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
-if(assortType>1) then ! between generic (1) / advanced assortments (2) / potentials for every year (3; uses 2 for actual harvests)
+if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assortments (2)
   if(assortType==3 .and. multiWood(siteX,ij,ijj,14) == 99.) Then
     multiWood(siteX,ij,ijj,1:13) = 0.
     endif

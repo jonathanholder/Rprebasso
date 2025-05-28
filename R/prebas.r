@@ -65,7 +65,7 @@
 #' @param SMIt0 site vector of initial SoilMoirture index
 #' @param TminTmax matrix(climaIDs,2) with daily Tmin Tmax values for each climID, Tmin and Tmax will be used to calculate the Nesterov Index that will be used in the fire risk calculations
 #' @param disturbanceON flag for activating disturbance modules. can be one of "wind", "fire",  "bb" or a combination of the three, ex. c("fire", "bb")
-#' @param CO2model CO2 model for PRELES. Default CO2model = 1 (Launaniemi) ; CO2model = 2 (Kolari) 
+#' @param CO2model CO2 model for PRELES. Default CO2model = 1 (Launaniemi) ; CO2model = 2 (Kolari)
 #'
 #' @return
 #'  soilC Initial soil carbon compartments for each layer. Array with dimentions = c(nYears,5,3,nLayers). The second dimention (5) corresponds to the AWENH pools; the third dimention (3) corresponds to the tree organs (foliage, branch and stem). \cr
@@ -212,7 +212,7 @@ prebas <- function(nYears,
 
   if(nrow(pCROBAS)!=nrow(pCROB)) stop(paste0("check that pCROBAS has",nrow(pCROB), "parameters, see pCROB to compare"))
   if(!CO2model %in% 1:2) stop(paste0("set CO2model 1 or 2"))
-  
+
   if(all(is.na(pPRELES))){
     pPRELES <- pPREL
     pPRELES[12:13] <- pCO2model[CO2model,]
@@ -316,12 +316,13 @@ prebas <- function(nYears,
   layerNam <- paste("layer",1:nLayers)
   output <- array(0, dim=c((nYears),nVar,nLayers,2),
                   dimnames = list(year=NULL,variable=varNam,layer=layerNam,status=c("stand","thinned")))
-  energyWood <- array(0, dim=c((nYears),nLayers,17),
-                      dimnames = list(year=NULL,layer=layerNam,variable=c("v_harvested", "roundw_tot", "sawnwood", "pulpwood", 
+  energyWood <- array(0, dim=c((nYears),nLayers,17,3),
+                      dimnames = list(year=NULL,layer=layerNam,variable=c("v_harvested", "roundw_tot", "sawnwood", "pulpwood",
                                                                           "energywood_roundw", "energywood_tot", "energyw_stump",
                                                                           "stump_stem", "n_harvested", "d_harvested", "h_harvested",
-                                                                          "qredfact", "stemwood_taper", "mgmt_type", 
-                                                                          "dummy1", "dummy2", "dummy3")))#jhassort
+                                                                          "qredfact", "stemwood_taper", "mgmt_type",
+                                                                          "dummy1", "dummy2", "dummy3"),
+                                                            assortmentclass=c("realised", "potential", "salvagelog"))) #jhassort
   fAPAR <- rep(0.7,nYears)
 
   ###compute ETS year
@@ -371,9 +372,9 @@ prebas <- function(nYears,
   if(length(inAclct)==1) inAclct<- rep(inAclct,nSp)
   if(any(is.na(inHclct))) inHclct[which(is.na(inHclct))] <- 999.99
   if(length(inHclct)==1) inHclct<- rep(inHclct,nSp)
-  
+
   clct_pars <- cbind(inDclct,inAclct,inHclct)
-  
+
   ###if any initial value is given the model is initialized from plantation
   if (all(is.na(initVar))){
     initVar <- matrix(NA,7,nLayers)
@@ -521,8 +522,8 @@ prebas <- function(nYears,
   if(fixAinit > 0){
     initClearcut[5] <- fixAinit
     fixAinit <- 1
-  } 
-  
+  }
+
   # disturbanceSwitch <- ifelse(disturbanceON==T, 1, 0)
   prebasFlags <- as.integer(c(etmodel, #int
                             GVrun,     #int

@@ -16,7 +16,7 @@ implicit none
 
 integer, parameter :: nVar=57,npar=64!, nSp=3
 real (kind=8), parameter :: pi = 3.1415927
-real (kind=8), parameter :: harvRatio = 0.9, energyRatio = 0.7
+!real (kind=8), parameter :: harvRatio = 0.9, energyRatio = 0.7 !jhassort. moved to pharv harvest paremeter object
 integer, intent(in) :: nYears(nSites),nLayers(nSites),allSP!,oldLayer !wdimpl, pflags
 integer :: i,climID,ij,iz,ijj,ki,n,jj,az
 integer, intent(in) :: nSites, maxYears, maxThin,nClimID,maxNlayers,startSimYear
@@ -46,13 +46,14 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5),minDharv,ageM
  real (kind=8), intent(out) :: fAPAR(nSites,maxYears)
  real (kind=8), intent(inout) :: initVar(nSites,7,maxNlayers),P0y(nClimID,maxYears,2),ETSy(nClimID,maxYears),ETSstart(nClimID)!,par_common
  real (kind=8), intent(inout) :: multiOut(nSites,maxYears,nVar,maxNlayers,2)
- real (kind=8), intent(inout) :: multiWood(nSites,maxYears,maxNlayers,2)!!energCuts
+ real (kind=8), intent(inout) :: multiWood(nSites,maxYears,maxNlayers,17,3)!!energCuts jhassort: extend to 17 vars, 4th dimension: 1 = realised/harvested assortments, 2 = potential/standing assortments, 3 = assortments of disturbed trees. controlled by assorttype, currently internal/hardcoded switch
  real (kind=8), intent(inout) :: soilCinOut(nSites,maxYears,5,3,maxNlayers),soilCtotInOut(nSites,maxYears) !dimensions = nyears,AWENH,treeOrgans(woody,fineWoody,Foliage),species
  real (kind=8) :: soilC(nSites,maxYears,5,3,maxNlayers),soilCtot(nSites,maxYears) !dimensions = nyears,AWENH,treeOrgans(woody,fineWoody,Foliage),species
  real (kind=8), intent(in) :: pYasso(35), weatherYasso(nClimID,maxYears,3),litterSize(3,allSP) !litterSize dimensions: treeOrgans,species
- real (kind=8) :: output(1,nVar,maxNlayers,2),totBA(nSites), relBA(nSites,maxNlayers),wood(1,maxNlayers,2)
+ real (kind=8) :: output(1,nVar,maxNlayers,2),totBA(nSites), relBA(nSites,maxNlayers)
+ real (kind=8) :: wood(1,maxNlayers,17,3) !jhassort: extended to 17 vars, 2 dims(1 = realised, 2 = potential, 3 salvlog assortments). single-year, single-stand version of multiWood for single-site prebas I/O
  real (kind=8) :: ClCutX, defaultThinX,maxState(nSites),check(maxYears), thinningX(maxThin,11)
- real (kind=8) :: energyWood, roundWood, energyCutX,thinFact,energy_flag=0., siteHarv(nSites)  !!energCuts
+ real (kind=8) :: energyWood(2), roundWood, energyCutX,thinFact,energy_flag=0., siteHarv(nSites)  !!energCuts !jhassort: extend energywood to 2; 1: energywood from roundwood, 2: total energywood
  integer :: maxYearSite = 300,Ainit,sitex,ops(1),species,layerX,domSp(1)
  integer :: year_smooth_cut_start,n_years_smooth_cut=10,n_years_smooth_cut_actual
  real (kind=8) :: tTapioX(5,3,2,7), ftTapioX(5,3,3,7), Vmort, D,randX,yearXrepl(nSites),mortModX,perVmort
@@ -73,7 +74,48 @@ real (kind=8) :: minFapar,fAparFactor=0.9
  real (kind=8), intent(inout) :: siteInfoDist(nSites,10), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
  logical :: disturbance_wind ! necessary for wind disturbance to activate management reaction; might be needed for other agents' mgmt reaction as well
 
+
+
  integer, intent(inout) :: prebasFlags(9)
+
+
+
+ !ASSORTMENTS
+ ! take 2, 5/2025
+ ! [originally: full assortment routine included in regionPrebas due to compensation harvests]
+ ! [bug causing instability in R session, extremely difficult tor trace, so put assortments for comp harvests on hold for now]
+ ! [include outcommented definitions for further reference]
+
+integer :: assortType
+real (kind=8) :: harvratio, energyratio ! formerly parameters, now variable via pharv
+
+!! definitions for assortmetn calculations within regionPrebas (i.e. compensation harvests)
+!! deactivated for now (see above)
+  !     !general, taper 'bucking'
+  ! real (kind=8) :: energyRatio, harvRatio !energyCut
+  ! real (kind=8), dimension(8):: stem_assort! assort() output list of stemwood volumes: roundwood, stumps, sawn, pulp, energy (tops+too short sawn/pulp), energy from roundwood (! not considering the short sawn(<1.3m-stump)/pulp sections(<~2m))
+  ! real (kind=8), dimension(5):: vols_raw! assort() output list of volumes: roundwood, stump ratio, sawn ratio, pulp ratio, energy ratio (tops) (all of stemwood) // can be removed in final version
+  ! real (kind=8) :: h_harvested, d_harvested, v_harvested, n_harvested, qred_modifier, hc_rem, lc_rem, A_rem, stumpratio
+  ! real (kind=8) :: felled_branch, felled_croot, turnover_fw, turnover_cw
+  ! real (kind=8) :: stumprecoveryrate ! share of stumps extracted (in the case of stump removal)
+  ! real (kind=8), dimension(4,3):: pharv ! parameters for harvesting/assortments; 1=harvestRatio, 2=energyRatio, 3=stumpRatio, 4=qred_modifier
+  ! integer :: stumpsampled !/ 0/1 stump removal (based on stumpratio probability)
+  !     !quality reduction model
+  ! REAL (kind=8), DIMENSION(30,5):: coef !methätalo coefficients
+  ! REAL (kind=8) :: lat, lon, alt !
+  ! INTEGER :: mkta, peat ! 1 = pine, 2 = spruce, 3 = birch + broad
+  ! REAL (kind=8) :: par_rhow !species' wood density; not in regionprebas, but necessary for assortments
+  ! REAL (kind=8) :: siteType !species' wood density; not in regionprebas, but necessary for assortments
+  ! REAL (kind=8) :: ets
+
+ assortType=3
+
+harvratio =  0.9 !
+energyratio=0.7 !formerly parameter, but needs to be variable (to be set by pharv)
+
+
+
+! // assortments, take2
 
 !!! 'un-vectorise' flags, fvec
 etmodel = prebasFlags(1)
@@ -154,7 +196,7 @@ do ij = startSimYear,maxYears
 
   !initialize annual harvest
  roundWood = 0.
- energyWood = 0.  !!energCuts
+ energyWood(:) = 0.  !!energCuts
  ! if Harvlim is between 0 and 10 calculates the Harvest limit as % of net growth
  if(HarvLim(ij,1)>0. .and. HarvLim(ij,1)<10.) then
   if(ij==1) then
@@ -168,8 +210,8 @@ do ij = startSimYear,maxYears
 		siteHarv(i) = areas(i) * sum(multiOut(i,year_smooth_cut_start:(ij-1),43,:,1) - &
                                multiOut(i,year_smooth_cut_start:(ij-1),42,:,1)) / n_years_smooth_cut_actual
 	  else
-		siteHarv(i)=0.								  
-      endif 
+		siteHarv(i)=0.
+      endif
      enddo
      HarvLim(ij,1) = HarvLim(ij,1) * sum(siteHarv)
      energy_flag = 1.
@@ -282,7 +324,7 @@ endif
    ClCutX = 0.
    defaultThinX = 0.
   endif
-  if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
+  if (HarvLim(ij,2) > 0. .and.  energyWood(1) >= HarvLim(ij,2)) then    !!energCuts
    energyCutX = 0.
   endif
   if(energy_flag==1. .and. energyCuts(i)==1. .and. (ClCutX == 1. .or. defaultThinX== 1.)) then
@@ -405,7 +447,7 @@ endif
     soilC(i,ij,:,:,1:nLayers(i)),pYasso,pAWEN,weatherYasso(climID,ij,:),&
     litterSize,soilCtot(i,ij),&
     defaultThinX,ClCutX,energyCutX,clct_pars(i,:,:), & !!energCuts
-    dailyPRELES(i,(((ij-1)*365)+1):(ij*365),:),yassoRun(i),wood(1,1:nLayers(i),:),&
+    dailyPRELES(i,(((ij-1)*365)+1):(ij*365),:),yassoRun(i),wood(1,1:nLayers(i),:,:),&
     tapioPars,thdPer(i),limPer(i),ftTapioX,tTapioX,GVout(i,ij,:),thinInt(i), &
     flagFert(i),nYearsFert,mortModX,pECMmod,ETSstart(climID), &
     siteInfoDist(i,:), outDist(i,ij,:), prebasFlags, latitude(i),P00CN(i), TsumSBBs(i,:)) !!wdimpl pflags !!energCuts
@@ -455,7 +497,7 @@ else
  jj=nLayers(i)
 endif
   if(sum(output(1,11,1:jj,1))==0 .and. yearXrepl(i) == 0.) then
-  
+
     if(fixAinitXX(i) > 0.) then
 	 Ainit = fixAinitXX(i)
 	else
@@ -475,7 +517,7 @@ endif
    endif
   endif
 
-  multiWood(i,ij,1:nLayers(i),:) = wood(1,1:nLayers(i),:)
+  multiWood(i,ij,1:nLayers(i),:,:) = wood(1,1:nLayers(i),:,:)
   multiOut(i,ij,1:2,1:nLayers(i),:) = output(1,1:2,1:nLayers(i),:)
   multiOut(i,ij,4:7,1:nLayers(i),:) = output(1,4:7,1:nLayers(i),:)
   multiOut(i,ij,9:nVar,1:nLayers(i),:) = output(1,9:nVar,1:nLayers(i),:)
@@ -494,10 +536,11 @@ endif
   ! initVar(i,8,1:nLayers(i)) = output(1,2,1:nLayers(i),1)  !!newX
   if(isnan(sum(output(1,37,1:nLayers(i),1)))) then
     roundWood = roundWood
-    energyWood = energyWood
+    energyWood(:) = energyWood(:)
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
-    energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
+    energyWood(1) = energyWood(1) + sum(wood(1,1:nLayers(i),6, 1))* areas(i)   !!energCuts !jhassort energywood from roundwood
+    energyWood(2) = energyWood(2) + sum(wood(1,1:nLayers(i),6, 1))* areas(i)   !!energCuts !jhassort total energywood
   endif
  end do !iz i site loop
 
@@ -527,7 +570,7 @@ endif
    climID = int(siteInfo(siteX,2))
   if(maxState(siteX)>minDharv .and. ClCut(siteX) > 0.) then
      energyCutX = energyCuts(siteX)
-   if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
+   if (HarvLim(ij,2) > 0. .and.  energyWood(1) >= HarvLim(ij,2)) then    !!energCuts
     energyCutX = 0.
    endif
 
@@ -589,12 +632,13 @@ endif
           multiOut(siteX,ij,30:34,ijj,2)
 !!energCuts
       if(energyCutX == 1.) then
-     multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + (multiOut(siteX,ij,24,ijj,1) + &
+     multiWood(siteX,ij,ijj,2,1) = multiWood(siteX,ij,ijj,2,1) + (multiOut(siteX,ij,24,ijj,1) + &
       multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio
      species = int(multiOut(siteX,ij,4,ijj,1))
      if(pCrobas(2,species) > 0.) then
-      multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,2) / pCrobas(2,species)
-      energyWood = energyWood + multiWood(siteX,ij,ijj,1) * areas(siteX)   !!energCuts !!!we are looking at volumes
+      multiWood(siteX,ij,ijj,1, 1) = multiWood(siteX,ij,ijj,2, 1) / pCrobas(2,species)
+      energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,1, 1) * areas(siteX)   !!energCuts !!!we are looking at volumes
+
      endif
      multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio) +   &
       multiOut(siteX,ij,51,ijj,1) + multiOut(siteX,ij,28,ijj,1)) + &
@@ -678,7 +722,7 @@ endif
    siteX = int(ops(1))
   if(maxState(siteX)>0. .and. ClCut(siteX) > 0.) then
      energyCutX = energyCuts(siteX)
-   if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
+   if (HarvLim(ij,2) > 0. .and.  energyWood(1) >= HarvLim(ij,2)) then    !!energCuts
     energyCutX = 0.
    endif
 
@@ -729,12 +773,12 @@ endif
       multiOut(siteX,ij,27,ijj,1) = multiOut(siteX,ij,25,ijj,1) * thinFact + multiOut(siteX,ij,27,ijj,1)
 !!energCuts
       if(energyCutX == 1.) then
-     multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + (multiOut(siteX,ij,24,ijj,1) + &
+     multiWood(siteX,ij,ijj,2, 1) = multiWood(siteX,ij,ijj,2, 1) + (multiOut(siteX,ij,24,ijj,1) + &
       multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio * thinFact
      species = int(multiOut(siteX,ij,4,ijj,1))
      if(pCrobas(2,species)>0.) then
-      multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,2) / pCrobas(2,species)
-      energyWood = energyWood + multiWood(siteX,ij,ijj,1) * areas(siteX)   !!energCuts !!!we are looking at volumes
+      multiWood(siteX,ij,ijj,1, 1) = multiWood(siteX,ij,ijj,2, 1) / pCrobas(2,species)
+      energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,1, 1) * areas(siteX)   !!energCuts !!!we are looking at volumes
      endif
      multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio) * thinFact +   &
       multiOut(siteX,ij,51,ijj,1)* thinFact + multiOut(siteX,ij,28,ijj,1)) + &
@@ -802,7 +846,7 @@ endif
 
   if(maxState(siteX)>minDharv .and. ClCut(siteX) > 0.) then
      energyCutX = energyCuts(siteX)
-   if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
+   if (HarvLim(ij,2) > 0. .and.  energyWood(1) >= HarvLim(ij,2)) then    !!energCuts
     energyCutX = 0.
    endif
    !if fertilization at thinning is active reset flagFert
@@ -861,11 +905,11 @@ endif
           multiOut(siteX,ij,30:34,ijj,2)
 !!energCuts
       if(energyCutX == 1.) then
-     multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + (multiOut(siteX,ij,24,ijj,1) + &
+     multiWood(siteX,ij,ijj,2, 1) = multiWood(siteX,ij,ijj,2,1) + (multiOut(siteX,ij,24,ijj,1) + &
       multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio
      species = int(multiOut(siteX,ij,4,ijj,1))
-     if(pCrobas(2,species)>0.)   multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,2) / pCrobas(2,species)
-     energyWood = energyWood + multiWood(siteX,ij,ijj,1) * areas(siteX)   !!energCuts !!!we are looking at volumes
+     if(pCrobas(2,species)>0.)   multiWood(siteX,ij,ijj,1,1) = multiWood(siteX,ij,ijj,2,1) / pCrobas(2,species)
+     energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,1,1) * areas(siteX)   !!energCuts !!!we are looking at volumes
 
         multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio)  +   &
       multiOut(siteX,ij,51,ijj,1) + multiOut(siteX,ij,28,ijj,1)) + &
@@ -952,7 +996,7 @@ endif
      if(maxState(siteX)>minDharv .and. ClCut(siteX) > 0.) then
   ! if(ClCut(siteX) > 0.) then
      energyCutX = energyCuts(siteX)
-   if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
+   if (HarvLim(ij,2) > 0. .and.  energyWood(1) >= HarvLim(ij,2)) then    !!energCuts
     energyCutX = 0.
    endif
    !!!harvest thinFact
@@ -991,11 +1035,11 @@ endif
       multiOut(siteX,ij,27,ijj,1) = multiOut(siteX,ij,25,ijj,1) * thinFact + multiOut(siteX,ij,27,ijj,1)
 !!energCuts
       if(energyCutX == 1.) then
-     multiWood(siteX,ij,ijj,2) = multiWood(siteX,ij,ijj,2) + (multiOut(siteX,ij,24,ijj,1) + &
+     multiWood(siteX,ij,ijj,2,1) = multiWood(siteX,ij,ijj,2,1) + (multiOut(siteX,ij,24,ijj,1) + &
       multiOut(siteX,ij,32,ijj,1)*0.3 + multiOut(siteX,ij,31,ijj,1)* (1-harvRatio)) * energyRatio * thinFact
      species = int(multiOut(siteX,ij,4,ijj,1))
-     if(pCrobas(2,species)>0.) multiWood(siteX,ij,ijj,1) = multiWood(siteX,ij,ijj,2) / pCrobas(2,species)
-     energyWood = energyWood + multiWood(siteX,ij,ijj,1) * areas(siteX)   !!energCuts !!!we are looking at volumes
+     if(pCrobas(2,species)>0.) multiWood(siteX,ij,ijj,1,1) = multiWood(siteX,ij,ijj,2,1) / pCrobas(2,species)
+     energyWood(1) = energyWood(1) + multiWood(siteX,ij,ijj,1,1) * areas(siteX)   !!energCuts !!!we are looking at volumes
 
      multiOut(siteX,ij,28,ijj,1) = max(0.,((multiOut(siteX,ij,24,ijj,1)*(1-energyRatio) * thinFact +   &
       multiOut(siteX,ij,51,ijj,1)* thinFact + multiOut(siteX,ij,28,ijj,1)) + &
