@@ -43,16 +43,16 @@ wriskLayers(:,:) = 0.
 ! DRAFT:
 !real (kind=8)::wrisk_hdomlayers(nLayers), hthresh, htresh_ba !
 hthresh = (maxval(STAND_all(11,:))-5)
-htresh_ba = 0
+htresh_ba = 0.
 do i = 1, nLayers
    if(STAND_all(11,i) > hthresh) THEN
  ! setting wrisks to 0 (subroutine inout), to be simplified
-      wrisk5dd1 = 0
-      wrisk5dd2 = 0
-      wrisk5dd3 = 0
-      wrisk0 = 0
-      wrisk5 = 0
-      wrisk = 0
+      wrisk5dd1 = 0.
+      wrisk5dd2 = 0.
+      wrisk5dd3 = 0.
+      wrisk0 = 0.
+      wrisk5 = 0.
+      wrisk = 0.
       call windrisk(siteInfoDist, INT(STAND_all(4,i)), STAND_all(11,i), 0, STAND_all(3,1), STAND_all(5,1), &
       INT(siteInfoDist(2)), wrisk5dd1,wrisk5dd2,wrisk5dd3,wrisk0,wrisk5,wrisk)
       htresh_ba =  htresh_ba+STAND_all(13,i) !collect ba of layers within htresh height range
@@ -185,7 +185,7 @@ V_tot = sum(STAND_all(30,:))
 
 vdam = wdistproc(4)*V_tot
 
-if(INT(outDist(year, 4))>0) then
+if(outDist(year, 4)>0.) then
   outDist(year, 5) = vdam
   outDist(year, 6) = wdistproc(4)
 endif
@@ -216,7 +216,7 @@ if (outDist(year,4)>0.) then !in case of disturbance xif1
 
   ! SALVAGE LOGGING
   if(vdam>=siteInfoDist(5)) then ! threshold for salvage logging
-    siteInfoDist(2) = 0 ! reset thinning counter, i.e. wind disturbance temporarily increases wind risk
+    siteInfoDist(2) = 0. ! reset thinning counter, i.e. wind disturbance temporarily increases wind risk
     call random_number(rndm)
     if(rndm<=siteInfoDist(6)) then
       pHarvTrees = siteInfoDist(7)! if sampled for salvlog set pHarvTrees
@@ -256,19 +256,25 @@ endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!! ASSORTMENTS OF DISTURBED TREES !!!
 if(.TRUE.) then
-if(outDist(year,7) == 1. ) then
+if(outDist(year,7) > 0. ) then
   if(assorttype==2 .or. assorttype==3) then
 
+    !
+    ! open(1,file="wdist_assort.txt")
+    !   close(1)
+    stand_all(11,ij) = H
+    stand_all(12,ij) = D
+    stand_all(13,ij) = BA
+    stand_all(16,ij) = A
+    stand_all(17,ij) = N
 
-    open(1,file="wdist_assort.txt")
-      close(1)
 
 do layer = 1, nLayers
   if (wriskLayers(layer,4)>0.) then !layer-level wind disturbed volume, assortments only invoked if layer is disturbed...
       ! initialising vars required for assortmetns
-      species = outt(4,layer,1)
-      d_harvested = outt(11,layer,1)
-      h_harvested = outt(12,layer,1)
+      species = stand_all(4,layer)
+      d_harvested = stand_all(12,layer)
+      h_harvested = stand_all(11,layer)
       if(h_harvested /= h_harvested) THEN ! sometimes NaN, leads to slightly negative v_harvested...
         h_harvested = 1.31
       endif
@@ -279,26 +285,39 @@ do layer = 1, nLayers
        n_harvested = 999.
       endif
       stem_assort(:) = 0.
-      age = outt(7,layer,1)
-      ets = outt(5,1,1)
+      age = stand_all(7,layer)
+      ets = stand_all(5,layer)
       call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_assort, INT(mkta), &
                   INT(siteType), INT(peat), lat, lon, alt, ets, age)
 
-
+        energyWood(year,layer,1,3) = v_harvested
         energyWood(year,layer,2,3) = stem_assort(1)              ! total roundwood
         energyWood(year,layer,3,3) = stem_assort(3)              ! sawnwood (quality reduced)
         energyWood(year,layer,4,3) = stem_assort(4)              ! pulpwood (including qred sawn, -harvestRatio)
-        energyWood(year,layer,6,1) = stem_assort(5)*energyRatio ! energywood total / done above
-        energyWood(year,layer,5,1) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand) / done above
+        energyWood(year,layer,5,3) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand) / done above
+        energyWood(year,layer,6,3) = stem_assort(5)*energyRatio ! energywood total / done above
+        energyWood(year,layer,7,3) = 0.                        ! energywood from stumps (not applicable in thinnings)
+
         energyWood(year,layer,8,3) = stem_assort(2)              ! stump (100% abg, partially included in energywood if collected)
         energyWood(year,layer,13,3) = stem_assort(7)!*n_harvested  ! total stemwood according to Laasasenaho taper function!n_harvested not really available ere...
-        energyWood(year,layer,7,3) = 0.                        ! energywood from stumps (not applicable in thinnings)
-        energyWood(year,layer,1,3) = v_harvested
         energyWood(year,layer,9,3) = n_harvested
         energyWood(year,layer,10,3) = d_harvested
         energyWood(year,layer,11,3) = h_harvested
         energyWood(year,layer,12,3) = stem_assort(8)              ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
         energyWood(year,layer,14,3) = 42.                   ! dummy for variable of interest
+
+
+
+!! update 'regular' harvests / add salvage logging
+        energyWood(year,layer,1:8,1) = energyWood(year,layer,1:8,1) +  energyWood(year,layer,1:8,3)             ! total roundwood
+                ! total roundwood
+        energyWood(year,layer,14,1) = 4242.   ! need for a decent identification here?
+
+
+
+
+
+
 
         ! checking inputs to asort subroutine (deactivate that then)
         ! energyWood(year,layer,1,3) = REAL(species)              ! total roundwood

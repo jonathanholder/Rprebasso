@@ -290,7 +290,7 @@ subroutine prioDistInSO(outDist, nSites, maxYears, year, siteOrder)
     ndistprio = 0
 
     do sitexx = 1, nSites
-        if (outDist(sitexx, 8) == 1.) then
+        if (outDist(sitexx, 8) > 0. ) then
             ndistprio = ndistprio + 1
             priosites(ndistprio) = sitexx
         end if
