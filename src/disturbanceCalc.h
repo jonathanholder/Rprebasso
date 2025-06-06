@@ -537,7 +537,7 @@ endif! (FALSE)
      STAND(31) = W_stem
      STAND(32) = W_croot
     !STAND(42) = Vold - V + STAND(42)!* min(1.,-dN*step/Nold)
-    STAND(42) = (Vold - V)*(1-pHarvTrees) + STAND(42)!* min(1.,-dN*step/Nold)
+    STAND(42) = (Vold - V)*(1-pHarvTrees) + STAND(42)!* min(1.,-dN*step/Nold) !!
      STAND(47) = W_wsap
      STAND(48) = W_c
      STAND(49) = W_s
@@ -554,9 +554,11 @@ if(ClCut == 0. .and. defaultThin == 0.) then ! either mgmt switched off entirely
     outDist(year,10) = 2. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
 elseif(ClCut > 0. .or. defaultThin > 0.) then
     outt(30,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)
-    pHarvTrees = 0
+    pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
     outDist(year,10) = 1. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
-
+    if(layer == nLayers) then
+    pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
+  endif ! solved (?) by only setting this for the last layer; test!!!
 
   endif !x6
 
