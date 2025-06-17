@@ -32,7 +32,7 @@ real (kind=8), intent(in) :: defaultThin(nSites),ClCut(nSites),yassoRun(nSites)
 real (kind=8), intent(in) :: clct_pars(nSites,allSP,3),energyCuts(nSites)	!!energCuts
 real (kind=8), intent(in) :: thinInt(nSites) !site specific parameter that determines the thinning intensity;
          !from below (thinInt>1) or above (thinInt<1);thinInt=999. uses the default value from tapio rules
-real (kind=8), intent(inout) :: siteInfoDist(nSites,10), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
+real (kind=8), intent(inout) :: siteInfoDist(nSites,13), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
 !!! fertilization parameters
 !integer, intent(inout) :: fertThin !!! flag for implementing fertilization at thinning. the number can be used to indicate the type of thinning for now only thinning 3!wdimpl pflags
 integer, intent(inout) :: flagFert !!! flag that indicates if fertilization has already been applied along the rotation

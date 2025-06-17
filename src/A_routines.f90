@@ -2682,7 +2682,7 @@ SUBROUTINE assort(spec, d, h, v, pharv, stem_assort, mkta, sitetype, peat, lat, 
 	        hx = 1.31
 				endif
         CALL taper_assort(spec, dx, hx, vols_raw) !n
-        CALL qred_f(mkta, sitetype, peat, lat, lon, alt, spec, dx, age, ets, qredfact)
+        CALL qred_f(sitetype, peat, lat, lon, alt, spec, dx, age, ets, qredfact)
         !qredfact = 0.3
         qred_modifier=pharv(4, spec)
         !qred_modifier = 1.
@@ -2749,17 +2749,17 @@ SUBROUTINE stumpsample(prob, stumpsampled)
 END SUBROUTINE stumpsample
 ! QUALITY REDUCTION MODEL FOR SAWNWOOD SECTION
 ! based on Mehtätalo (2002)
-SUBROUTINE qred_f(mkta, sitetype, peat, lat, lon, alt, spec, d, age, ets, qredfact) !n
+SUBROUTINE qred_f(sitetype, peat, lat, lon, alt, spec, d, age, ets, qredfact) !n
     IMPLICIT NONE
     !I/O
       ! INPUT
     REAL (kind=8), DIMENSION(30,5) :: coef !methätalo coefficients
     REAL (kind=8), INTENT(IN) :: ets, d, lat, lon, alt, age !
-    INTEGER, INTENT(IN):: spec, mkta, peat, sitetype ! 1 = pine, 2 = spruce, 3 = birch + broad
+    INTEGER, INTENT(IN):: spec,  peat, sitetype ! 1 = pine, 2 = spruce, 3 = birch + broad
       ! OUTPUT
     REAL (kind=8), INTENT(OUT):: qredfact !methätalo coefficients
       ! PROCESS VARS
-    INTEGER :: north
+    INTEGER :: north, aland
     REAL (kind=8) :: evtobinI, evtobinR, age_bh, l
     REAL (kind=8), DIMENSION(30):: c !methätalo species-/region-specific coefficients
     ! coefficients hardcoded for now, pull out? don't see any benefits from that...
@@ -2773,11 +2773,28 @@ SUBROUTINE qred_f(mkta, sitetype, peat, lat, lon, alt, spec, d, age, ets, qredfa
           0.001167, 0., 0., 0., 0., 0.006862, 0., 0., -0.01092, 0., 0., 1.401, 0.613, 0., 0., 2.239, 0., 0. /), shape(coef))
     ! calculate age at breast height (as required by mehtätalo)
     age_bh =  max(1., REAL(age-nint(6 + 2*sitetype - 0.005*ets + 2.25), 4))
-    ! set north dummy according to mkta
+
+
+
+		! Update: remove maakunta to reduce inputs, difficult with simulations spread across multiple maakuntas
+		! --> retrieve from lat/lon
+		! Attention: coords in odd format, EPSG 2923 (yhtenäiskoordinaattijärjestelmä), in km; lat range 6600-7800, lon with false easting removed, i.e. 0-800
+! set north dummy according to mkta
     north = 0
-    IF (mkta == 8 .OR. mkta == 16 .OR. mkta == 19) THEN !Lappi, Kainuu, Pohjois-Pohjanmaa
-      north = 1
-    END IF
+    ! IF (mkta == 8 .OR. mkta == 16 .OR. mkta == 19) THEN !Lappi, Kainuu, Pohjois-Pohjanmaa !!deprecated 120625, replaced by lat threshold (7000)
+		!   north = 1
+    ! END IF
+		IF (lat > 7000.) THEN !Lappi, Kainuu, Pohjois-Pohjanmaa
+			north = 1
+		END IF
+
+    aland = 0
+		IF (lat < 6800. .AND. lon < 200.) THEN !bbox åland/ahvenanmaa
+			aland = 1
+		END IF
+
+
+
     ! select coefficients based on species and north 0/1
     if (spec==1 .AND. north==0) THEN! pine in S
       c(:) = coef(: , 1)
@@ -2815,7 +2832,7 @@ SUBROUTINE qred_f(mkta, sitetype, peat, lat, lon, alt, spec, d, age, ets, qredfa
       min(alt, 120.)*c(21) + &
       max(0., alt-(11./80.*lat-741.25))*c(22) + &!# height above rime potential height (see mehtätalo eq 6, p. 585)
       log(ets)*c(23) + &
-      evtobinI(mkta, 2)*c(24) + &!# Åland
+      evtobinI(aland, 2)*c(24) + &!# Åland
       evtobinI(north, 1)*c(25) + &! north = Kainu, Pohjois-Pohjanmaa, Lappi
       evtobinI(peat, 1)*c(26) + &
       evtobinI(sitetype,1)*c(27) + & !# metsikön metsätyyppi on lehtomainen kangas tai rehevämpi tai vastaava suo

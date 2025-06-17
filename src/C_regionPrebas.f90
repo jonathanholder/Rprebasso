@@ -71,7 +71,7 @@ real (kind=8) :: minFapar,fAparFactor=0.9
 !!! Nitrogen
  real (kind=8) :: UmaxFactor(nSites,maxYears,maxNlayers)
  integer :: etmodel, CO2model,gvRun, fertThin, oldLayer, ECMmod !not direct inputs anymore, but in prebasFlags !wdimpl pflags
- real (kind=8), intent(inout) :: siteInfoDist(nSites,10), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
+ real (kind=8), intent(inout) :: siteInfoDist(nSites,13), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
  logical :: disturbance_wind ! necessary for wind disturbance to activate management reaction; might be needed for other agents' mgmt reaction as well
 
 

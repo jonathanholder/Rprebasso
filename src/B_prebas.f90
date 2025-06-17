@@ -31,7 +31,7 @@ integer, intent(in) :: nYears, nLayers, nSp ! no of year, layers, species (only 
  !(wind) disturbances
 
  logical :: disturbance_wind, disturbance_bb, disturbance_fire !fvec
- real (kind=8), intent(inout) :: siteInfoDist(10), outDist(nYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules
+ real (kind=8), intent(inout) :: siteInfoDist(13), outDist(nYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules
  real (kind=8) :: rndm, rdvol_sampled !random number for disturbance sampling, sampled relative disturbed vol (wind)
  integer :: distvloc, sevclasslength !integer for element of NFI sevclass list of directly damaged relative volumes; n of elements in that list
 real (kind=8) :: sc1vols(87), sc2vols(15), sc3vols(6)
@@ -1173,10 +1173,22 @@ stumprecoveryrate = 0.9
 !quality reduction
 !SUBROUTINE qred_f(mkta, sitetype, peat, lat, lon, alt, spec, d, age, ets, coef, qredfact) !n
 !NOTE: dummies for qred inputs, need to get those externally later on
-lat = 7000.
-lon = 400.
-alt = 100.
+
+
+
+
+lat = siteInfoDist(11) !7000.
+lon = siteInfoDist(12) !400.
+alt = siteInfoDist(13) !100.
+
+
+
+!peat:retrieved from siteinfodist for now (unify siteinfo & siteinfodist?)
 peat = 0
+if(siteInfoDist(3)>1.5) then
+peat = 1
+endif
+ ! available from siteInfoDist()
 mkta = 5
 !/jh end assortment settings
 !jh POTENTIAL ASSORTMENTS (for every year)
