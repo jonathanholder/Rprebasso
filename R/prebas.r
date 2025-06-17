@@ -264,7 +264,7 @@ prebas <- function(nYears,
   ####initialize disturbance module if exists
   if(is.na(siteInfoDist)){
     #disturbanceON = FALSE
-    siteInfoDist = rep(0,10)
+    siteInfoDist = rep(0,13)
 
     outDist = matrix(0,nYears,10)
   }else{

@@ -60,7 +60,7 @@
 #' @param TminTmax array(climaIDs,ndays,2) with daily Tmin Tmax values for each climID, Tmin and Tmax will be used to calculate the Nesterov Index that will be used in the fire risk calculations
 #' @param disturbanceON flag for activating disturbance modules. can be one of "wind", "fire",  "bb" or a combination of the three, ex. c("fire", "bb")
 #' @param CO2model CO2 model for PRELES. Default CO2model = 1 (Launaniemi) ; CO2model = 2 (Kolari)
-#'
+#' @param siteInfoDist inputs for (wind) disturbance module, matrix(nSites, 13). variables: 1/"wspeed": maximum 10a return localised wind speed (m/s, Venäläinen et al. 2017), 2/"tsincethin_init": time since last thinning for initialisation (note: updated in simulations!), 3/"soiltype": 0=mineral soil, fine; 1=mineral soil, coarse; 2=peat;  4/"shallowsoil": 0=soildepth > 30cm, 1=soildepth<30cm; "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
 #' @return Initialize PREBAS and return an object list that can be inputted to multiPrebas and regionPrebas functions to run PREBAS
 #' @export
 #'
@@ -817,7 +817,7 @@ multiPrebas <- function(multiSiteInit,
   dist_flag <- multiSiteInit$dist_flag
   if(all(is.na(siteInfoDist))){
     disturbanceON = FALSE
-    siteInfoDist = matrix(0,multiSiteInit$nSites,10)
+    siteInfoDist = matrix(0,multiSiteInit$nSites,13)
 
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
@@ -833,7 +833,7 @@ multiPrebas <- function(multiSiteInit,
                              variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "domh"))
 
   dimnames(siteInfoDist) <-  list(site=NULL,
-                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
+                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare", "assort_lat", "assort_lon", "assort_elevation"))
 
 
   #initialize alfar
@@ -1051,7 +1051,7 @@ regionPrebas <- function(multiSiteInit,
   dist_flag <- multiSiteInit$dist_flag
   if(all(is.na(siteInfoDist))){
     disturbanceON = FALSE
-    siteInfoDist = matrix(0,multiSiteInit$nSites,10)
+    siteInfoDist = matrix(0,multiSiteInit$nSites,13)
 
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
@@ -1064,10 +1064,10 @@ regionPrebas <- function(multiSiteInit,
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }
   dimnames(outDist) <-  list(site=NULL, year=NULL,
-                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "domh"))
+                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "mgmt_harvlimcount"))
 
   dimnames(siteInfoDist) <-  list(site=NULL,
-                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
+                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare", "assort_lat", "assort_lon", "assort_elevation"))
 
 
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
@@ -1345,7 +1345,7 @@ reStartRegionPrebas <- function(multiSiteInit,
   dist_flag <- multiSiteInit$dist_flag
   if(all(is.na(siteInfoDist))){
     disturbanceON = FALSE
-    siteInfoDist = matrix(0,multiSiteInit$nSites,10)
+    siteInfoDist = matrix(0,multiSiteInit$nSites,13)
 
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
@@ -1358,10 +1358,10 @@ reStartRegionPrebas <- function(multiSiteInit,
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }
   dimnames(outDist) <-  list(site=NULL, year=NULL,
-                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "domh"))
+                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "mgmt_harvlimcount"))
 
   dimnames(siteInfoDist) <-  list(site=NULL,
-                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
+                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare", "assort_lat", "assort_lon", "assort_elevation"))
 
 
 
