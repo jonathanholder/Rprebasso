@@ -554,7 +554,7 @@ if(ClCut == 0. .and. defaultThin == 0.) then ! either mgmt switched off entirely
     outDist(year,10) = 2. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
 elseif(ClCut > 0. .or. defaultThin > 0.) then
     outt(30,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)
-    pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
+    !pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
     outDist(year,10) = 1. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
     if(layer == nLayers) then
     pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
