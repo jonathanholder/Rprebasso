@@ -76,7 +76,7 @@ real (kind=8) :: minFapar,fAparFactor=0.9
 
 
 
- integer, intent(inout) :: prebasFlags(9)
+ integer, intent(inout) :: prebasFlags(10)
 
 
 
@@ -108,7 +108,7 @@ real (kind=8) :: harvratio, energyratio ! formerly parameters, now variable via 
   ! REAL (kind=8) :: siteType !species' wood density; not in regionprebas, but necessary for assortments
   ! REAL (kind=8) :: ets
 
- assortType=3
+ !assortType=3 !now input (via prebasflags)
 
 harvratio =  0.9 !
 energyratio=0.7 !formerly parameter, but needs to be variable (to be set by pharv)
@@ -128,6 +128,7 @@ fixAinitXX = multiOut(:,1,7,1,2)
 multiOut(:,1,7,1,2) = 0.
 ! set ingrowtflag
 prebasFlags(9) = -777
+assorttype = prebasFlags(10)
 
 if(prebasFlags(6)==1 .or. prebasFlags(6)==12 .or. prebasFlags(6)==13 .or. prebasFlags(6)==123) disturbance_wind = .TRUE.
 

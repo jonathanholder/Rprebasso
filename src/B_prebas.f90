@@ -148,7 +148,7 @@ real (kind=8) :: Nmort, BAmort, VmortDist(nLayers)
  real (kind=8) :: pHarvTrees, hW_branch, hW_croot, hW_stem, hWdb
  real (kind=8) :: remhW_branch, remhW_croot,remhW_stem,remhWdb
  integer :: CO2model, AinitFix,etmodel, gvRun, fertThin, ECMmod, oldLayer !not direct inputs anymore, but in prebasFlags fvec
-integer, intent(inout) :: prebasFlags(9)
+integer, intent(inout) :: prebasFlags(10)
 
  !fire disturbances
  real (kind=8) :: dailySW(365)
@@ -183,6 +183,7 @@ oldLayer = int(prebasFlags(4))
 ECMmod = int(prebasFlags(5))
 CO2model = int(prebasFlags(7))
 AinitFix = int(prebasFlags(8))
+assortType = int(prebasFlags(10))
 
 !!set disturbance flags
 ! set all dist to 0 and then choose based on flag
@@ -1158,7 +1159,7 @@ endif
 ! ASSORTMENTS: SETTINGS
 !jhassort will be included as parameters/input making this obsolete
 ! ! switch between generic/simple (1), complex/taper+qred assortments (2), and potential assortments for every year (3; invokes 2 as well, which in the case of harvests being conducted override the potentials)
- assortType = INT(3)
+ !assortType = INT(3) ! now input via prebasflags
 !
 !ratio of stumps extracted if they are collected (stumpsampled=T)
 stumprecoveryrate = 0.9

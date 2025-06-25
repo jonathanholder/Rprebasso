@@ -207,7 +207,8 @@ prebas <- function(nYears,
                    SMIt0 = NA,
                    TminTmax = NA,
                    disturbanceON = NA,
-                   CO2model = 2 ###default from Kalliokosky 2018
+                   CO2model = 2, ###default from Kalliokosky 2018
+                   assorttype = 1
               ){
 
   if(nrow(pCROBAS)!=nrow(pCROB)) stop(paste0("check that pCROBAS has",nrow(pCROB), "parameters, see pCROB to compare"))
@@ -533,7 +534,8 @@ prebas <- function(nYears,
                             dist_flag,
                             CO2model,
                             fixAinit,
-                            -777)) ###ingrowth flag
+                            -777, ###ingrowth flag
+                            assorttype)
 
   ###modify alphar if fertilization is included
   if(!is.null(yearFert)){
