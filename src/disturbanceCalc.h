@@ -43,16 +43,16 @@ wriskLayers(:,:) = 0.
 ! DRAFT:
 !real (kind=8)::wrisk_hdomlayers(nLayers), hthresh, htresh_ba !
 hthresh = (maxval(STAND_all(11,:))-5)
-htresh_ba = 0
+htresh_ba = 0.
 do i = 1, nLayers
    if(STAND_all(11,i) > hthresh) THEN
  ! setting wrisks to 0 (subroutine inout), to be simplified
-      wrisk5dd1 = 0
-      wrisk5dd2 = 0
-      wrisk5dd3 = 0
-      wrisk0 = 0
-      wrisk5 = 0
-      wrisk = 0
+      wrisk5dd1 = 0.
+      wrisk5dd2 = 0.
+      wrisk5dd3 = 0.
+      wrisk0 = 0.
+      wrisk5 = 0.
+      wrisk = 0.
       call windrisk(siteInfoDist, INT(STAND_all(4,i)), STAND_all(11,i), 0, STAND_all(3,1), STAND_all(5,1), &
       INT(siteInfoDist(2)), wrisk5dd1,wrisk5dd2,wrisk5dd3,wrisk0,wrisk5,wrisk)
       htresh_ba =  htresh_ba+STAND_all(13,i) !collect ba of layers within htresh height range
@@ -61,10 +61,12 @@ do i = 1, nLayers
 end do
 
   ! for development of wrisk of co-dominant layers
+outdist(year,2) = siteInfoDist(2) !include timesincethinning in output
 
-  outDist(year,1) = wriskLayers(1,1)/STAND_all(13,1) ! layer 1 un-weighed wrisk
-  outDist(year,2) = wriskLayers(2,1)/STAND_all(13,2) ! layer 2 un-weighed wrisk
-  outDist(year,10) = wriskLayers(3,1)/STAND_all(13,3) ! layer 3 un-weighed wrisk
+
+  ! outDist(year,1) = wriskLayers(1,1)/STAND_all(13,1) ! layer 1 un-weighed wrisk
+  ! outDist(year,2) = wriskLayers(2,1)/STAND_all(13,2) ! layer 2 un-weighed wrisk
+  ! outDist(year,10) = wriskLayers(3,1)/STAND_all(13,3) ! layer 3 un-weighed wrisk
 
 if(htresh_ba>0.) then
   outDist(year,3) = sum(wriskLayers(:,1))/htresh_ba
@@ -86,6 +88,10 @@ endif
 
 !!!! ABOVE: REPLACED BY DRAFT
 
+
+! UPDATE: severity-class based sampling (below) replaced by sampling from fitted lognormal distribution
+
+
 !!!!!!! WIND DISTURBANCE IMPACT MODELLING !!!!!!!!!!
 ! basic idea: 3-step sampling
 !    - first sample with above risk as probability if a wind disturbance occurs
@@ -94,51 +100,68 @@ endif
 ! current status: damaged V in outDist[,,9], needs to be tested. further implementation via thinmat or so do be discussed
 
 !!! STEP 1: wind disturbance 0/1 based on wind risk
+! call RANDOM_SEED
 call random_number(rndm)
-if(rndm <= wrisk) outDist(year,4) = 1 !wind disturbance occurs/ set severity class to 1
-if(rndm > wrisk) outDist(year,4) = 0 !... or doesn't.
+if(rndm <= outDist(year,3)) outDist(year,4) = 1. !wind disturbance occurs/ set severity class to 1
+if(rndm > outDist(year,3)) outDist(year,4) = 0. !... or doesn't.
 
 !step 2: severity class (for now with shares/probabilities from post-storm inventory )
-if (outDist(year,4)==1) then
-  call random_number(rndm) ! leave sevclass at 1 or increase based on sampling
-  !outDist(year,8) = 1 !set sevclass to 1
-  if(rndm <= (0.13888889 + 0.05555556)) outDist(year,4) = 2 !probability of sevclass 3 needs to be added (random number procedure, otherwise the probability for sevclass 2 includes that for sevclass 3...)
-  if(rndm <= 0.05555556) outDist(year,4) = 3
-endif
-
-!!! STEP 3: sample from severity class-specific set of relative disturbed volumes
-if (outDist(year,4)==1) then ! sevclass 1
- call random_number(rndm)
- sevclasslength = 87 !n of plots with sc 1 in ps inventory data
- distvloc = FLOOR(sevclasslength*rndm+1) ! sample one of these
- sc1vols =  (/ 0.047246314, 0.067229849, 0.169719737, 0.318203784, 0.018104818, 0.104955687, 0.032123615, 0.092026088, &
-   0.013472795, 0.166694679, 0.195763598, 0.045904633, 0.030510592, 0.257592283, 0.055838402, 0.091561805, 0.085415300, &
-   0.045814558, 0.036180144, 0.019006098, 0.040064294, 0.071564091, 0.010477727, 0.019651214, 0.175753183, 0.208317710, &
-   0.009252750, 0.082452182, 0.031980969, 0.087094521, 0.021563759, 0.091875943, 0.075276931, 0.057730433, 0.030528242, &
-   0.113322118, 0.062922399, 0.220426425, 0.026159837, 0.033814844, 0.037818739, 0.102943860, 0.112303663, 0.095156499, &
-   0.054769579, 0.135111101, 0.026199722, 0.012797435, 0.034510249, 0.041657274, 0.069087262, 0.117174984, 0.045324950, &
-   0.073308835, 0.021494620, 0.034361839, 0.045795929, 0.199031553, 0.014349513, 0.035105534, 0.108747020, 0.077563323, &
-   0.017255370, 0.061953846, 0.208826663, 0.429494553, 0.025722064, 0.007571658, 0.024630056, 0.314765240, 0.024407173, &
-   0.027934229, 0.012025332, 0.024008892, 0.028082671, 0.043077586, 0.015088951, 0.069155659, 0.044578726, 0.037450261, &
-   0.003549555, 0.030742784, 0.114136973, 0.012353190, 0.039182845, 0.061220194, 0.032197320 /)
- wdistproc(4) = sc1vols(distvloc)
-
-else if (outDist(year,4)==2) then ! sevclass 2
- call random_number(rndm)
- sevclasslength = 15 !n of plots with sc 2 in ps inventory data
-distvloc = FLOOR(sevclasslength*rndm+1) ! sample one of these
- sc2vols =  (/ 0.23033922, 0.37008936, 0.09131254, 0.25163284, 0.29842135, 0.33619803, 0.13216089, 0.43466740, 0.20183134, &
-   0.08506387, 0.07892917, 0.04246911, 0.24749787, 0.02704628, 0.02121135 /)
- wdistproc(4) = sc2vols(distvloc)
-
-else if (outDist(year,4)==3) then !sevclass 3
- call random_number(rndm)
- sevclasslength = 6 !n of plots with sc 3 in ps inventory data
- distvloc = FLOOR(sevclasslength*rndm+1) ! sample one of these
- sc3vols =  (/ 0.09466817, 0.76296213, 1.0, 0.82065451, 0.21933642, 0.33760203 /)
- wdistproc(4) = sc3vols(distvloc)
-endif
+! if (INT(outDist(year,4))==1) then
+!   call RANDOM_SEED
+!   call random_number(rndm) ! leave sevclass at 1 or increase based on sampling
+!   !outDist(year,8) = 1 !set sevclass to 1
+!   if(rndm <= (0.13888889 + 0.05555556)) outDist(year,4) = 2. !probability of sevclass 3 needs to be added (random number procedure, otherwise the probability for sevclass 2 includes that for sevclass 3...)
+!   if(rndm <= 0.05555556) outDist(year,4) = 3.
+! endif
+!
+! !!! STEP 3: sample from severity class-specific set of relative disturbed volumes
+! if (INT(outDist(year,4))==1) then ! sevclass 1
+!   call RANDOM_SEED
+!  call random_number(rndm)
+!  sevclasslength = 87 !n of plots with sc 1 in ps inventory data
+!  distvloc = FLOOR(sevclasslength*rndm+1) ! sample one of these
+!  sc1vols =  (/ 0.047246314, 0.067229849, 0.169719737, 0.318203784, 0.018104818, 0.104955687, 0.032123615, 0.092026088, &
+!    0.013472795, 0.166694679, 0.195763598, 0.045904633, 0.030510592, 0.257592283, 0.055838402, 0.091561805, 0.085415300, &
+!    0.045814558, 0.036180144, 0.019006098, 0.040064294, 0.071564091, 0.010477727, 0.019651214, 0.175753183, 0.208317710, &
+!    0.009252750, 0.082452182, 0.031980969, 0.087094521, 0.021563759, 0.091875943, 0.075276931, 0.057730433, 0.030528242, &
+!    0.113322118, 0.062922399, 0.220426425, 0.026159837, 0.033814844, 0.037818739, 0.102943860, 0.112303663, 0.095156499, &
+!    0.054769579, 0.135111101, 0.026199722, 0.012797435, 0.034510249, 0.041657274, 0.069087262, 0.117174984, 0.045324950, &
+!    0.073308835, 0.021494620, 0.034361839, 0.045795929, 0.199031553, 0.014349513, 0.035105534, 0.108747020, 0.077563323, &
+!    0.017255370, 0.061953846, 0.208826663, 0.429494553, 0.025722064, 0.007571658, 0.024630056, 0.314765240, 0.024407173, &
+!    0.027934229, 0.012025332, 0.024008892, 0.028082671, 0.043077586, 0.015088951, 0.069155659, 0.044578726, 0.037450261, &
+!    0.003549555, 0.030742784, 0.114136973, 0.012353190, 0.039182845, 0.061220194, 0.032197320 /)
+!  wdistproc(4) = sc1vols(distvloc)
+!
+! else if (INT(outDist(year,4))==2) then ! sevclass 2
+!  call random_number(rndm)
+!  sevclasslength = 15 !n of plots with sc 2 in ps inventory data
+! distvloc = FLOOR(sevclasslength*rndm+1) ! sample one of these
+!  sc2vols =  (/ 0.23033922, 0.37008936, 0.09131254, 0.25163284, 0.29842135, 0.33619803, 0.13216089, 0.43466740, 0.20183134, &
+!    0.08506387, 0.07892917, 0.04246911, 0.24749787, 0.02704628, 0.02121135 /)
+!  wdistproc(4) = sc2vols(distvloc)
+!
+! else if (INT(outDist(year,4))==3) then !sevclass 3
+!  call random_number(rndm)
+!  sevclasslength = 6 !n of plots with sc 3 in ps inventory data
+!  distvloc = FLOOR(sevclasslength*rndm+1) ! sample one of these
+!  sc3vols =  (/ 0.09466817, 0.76296213, 1.0, 0.82065451, 0.21933642, 0.33760203 /)
+!  wdistproc(4) = sc3vols(distvloc)
+!endif
 !!! END WIND IMPACT CALCULATIONS !!!!
+
+! sampling relative damaged volume from lognormal distribution fitted to 2001 post-storm inventory data
+if(outDist(year,4)>0.) then
+  rdvol_sampled = 0.5  !0.5 dummy for i/o
+  call sample_rdvol(rdvol_sampled) !
+ wdistproc(4) = rdvol_sampled
+endif
+
+
+
+
+
+
+
 
 !!! DISTRIBUTE SHARE OF VOLUME DISTURBED TO LAYERS !!!
 ! idea: - calculate layer-level risks for dominant layer + those with H>(domh-3m) (for now)
@@ -162,7 +185,7 @@ V_tot = sum(STAND_all(30,:))
 
 vdam = wdistproc(4)*V_tot
 
-if(outDist(year, 4)>0) then
+if(outDist(year, 4)>0.) then
   outDist(year, 5) = vdam
   outDist(year, 6) = wdistproc(4)
 endif
@@ -193,7 +216,7 @@ if (outDist(year,4)>0.) then !in case of disturbance xif1
 
   ! SALVAGE LOGGING
   if(vdam>=siteInfoDist(5)) then ! threshold for salvage logging
-    siteInfoDist(2) = 0 ! reset thinning counter, i.e. wind disturbance temporarily increases wind risk
+    siteInfoDist(2) = 0. ! reset thinning counter, i.e. wind disturbance temporarily increases wind risk
     call random_number(rndm)
     if(rndm<=siteInfoDist(6)) then
       pHarvTrees = siteInfoDist(7)! if sampled for salvlog set pHarvTrees
@@ -215,7 +238,7 @@ if (outDist(year,4)>0.) then !in case of disturbance xif1
   endif!if_s
 
   ! CLEAR CUT IN SEVERERELY DISTURBED SITES ()
-  if((wdistproc(4)>=0.5 .OR. outDist(year,4)==3) .AND. siteInfoDist(10)>0.) then !CC if sevclass = 3 or >50% of volume disturbed
+  if(wdistproc(4)>=0.5 .AND. siteInfoDist(10)>0.) then !CC if sevclass = 3 or >50% of volume disturbed
     call random_number(rndm)
     if(rndm<=siteInfoDist(10)) then
        outDist(year,9) = 1. !indicate clearcut
@@ -228,6 +251,103 @@ if(clCut<0.) then !blocking mgmt reactions in sites indicated as preservation/un
   pHarvTrees = 0.
   outDist(year,7:9) = 0.
 endif
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! ASSORTMENTS OF DISTURBED TREES !!!
+if(.TRUE.) then
+if(outDist(year,7) > 0. ) then
+  if(assorttype==2 .or. assorttype==3) then
+
+    !
+    ! open(1,file="wdist_assort.txt")
+    !   close(1)
+    stand_all(11,ij) = H
+    stand_all(12,ij) = D
+    stand_all(13,ij) = BA
+    stand_all(16,ij) = A
+    stand_all(17,ij) = N
+
+
+do layer = 1, nLayers
+  if (wriskLayers(layer,4)>0.) then !layer-level wind disturbed volume, assortments only invoked if layer is disturbed...
+      ! initialising vars required for assortmetns
+      species = stand_all(4,layer)
+      d_harvested = stand_all(12,layer)
+      h_harvested = stand_all(11,layer)
+      if(h_harvested /= h_harvested) THEN ! sometimes NaN, leads to slightly negative v_harvested...
+        h_harvested = 1.31
+      endif
+      v_harvested = wriskLayers(layer,4)
+      if(outt(30,layer,1)>0.) then !in case the whole layer has been disturbed (divby0 danger)
+       n_harvested = v_harvested/outt(30,layer,1)
+      else
+       n_harvested = 999.
+      endif
+      stem_assort(:) = 0.
+      age = stand_all(7,layer)
+      ets = stand_all(5,layer)
+      call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_assort, INT(mkta), &
+                  INT(siteType), INT(peat), lat, lon, alt, ets, age)
+
+        energyWood(year,layer,1,3) = v_harvested
+        energyWood(year,layer,2,3) = stem_assort(1)              ! total roundwood
+        energyWood(year,layer,3,3) = stem_assort(3)              ! sawnwood (quality reduced)
+        energyWood(year,layer,4,3) = stem_assort(4)              ! pulpwood (including qred sawn, -harvestRatio)
+        energyWood(year,layer,5,3) = stem_assort(6)*energyRatio ! energywood from roundwood (used to meet harvest demand) / done above
+        energyWood(year,layer,6,3) = stem_assort(5)*energyRatio ! energywood total / done above
+        energyWood(year,layer,7,3) = 0.                        ! energywood from stumps (not applicable in thinnings)
+
+        energyWood(year,layer,8,3) = stem_assort(2)              ! stump (100% abg, partially included in energywood if collected)
+        energyWood(year,layer,13,3) = stem_assort(7)!*n_harvested  ! total stemwood according to Laasasenaho taper function!n_harvested not really available ere...
+        energyWood(year,layer,9,3) = n_harvested
+        energyWood(year,layer,10,3) = d_harvested
+        energyWood(year,layer,11,3) = h_harvested
+        energyWood(year,layer,12,3) = stem_assort(8)              ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
+        energyWood(year,layer,14,3) = 42.                   ! dummy for variable of interest
+
+
+
+!! update 'regular' harvests / add salvage logging
+        energyWood(year,layer,1:8,1) = energyWood(year,layer,1:8,1) +  energyWood(year,layer,1:8,3)             ! total roundwood
+                ! total roundwood
+        energyWood(year,layer,14,1) = 4242.   ! need for a decent identification here?
+
+
+
+
+
+
+
+        ! checking inputs to asort subroutine (deactivate that then)
+        ! energyWood(year,layer,1,3) = REAL(species)              ! total roundwood
+        ! energyWood(year,layer,2,3) = REAL(n_harvested)              ! total roundwood
+        ! energyWood(year,layer,3,3) = REAL(d_harvested)              ! total roundwood
+        ! energyWood(year,layer,4,3) = REAL(h_harvested)              ! total roundwood
+        ! energyWood(year,layer,5,3) = REAL(v_harvested)              ! total roundwood
+        ! energyWood(year,layer,6,3) = REAL(age)              ! total roundwood
+        ! energyWood(year,layer,7,3) = REAL(mkta)              ! total roundwood
+        ! energyWood(year,layer,8,3) = REAL(siteType)              ! total roundwood
+        ! energyWood(year,layer,9,3) = REAL(peat)              ! total roundwood
+        ! energyWood(year,layer,10,3) = REAL(lat)              ! total roundwood
+        ! energyWood(year,layer,11,3) = REAL(lon)              ! total roundwood
+        ! energyWood(year,layer,12,3) = REAL(ets)              ! total roundwood
+        ! energyWood(year,layer,13,3) = 99.       ! total roundwood
+        ! energyWood(year,layer,14,3) =    99.  ! total roundwood
+
+
+
+
+
+
+   endif !(wriskLayers(layer,4)>0.)
+    end do !layer = 1, nLayers
+  endif !(outDist(year,7) == 1. )
+endif !((assorttype==2 .or. assorttype==3))
+endif! (FALSE)
+!!! /// end ASSORTMENTS OF DISTURBED TREES !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 !!!! UPDATING STAND VARS !!!!
 ! based on Francesco's code, only inputs necessary: layer level killed BA & pHarvTrees
@@ -252,14 +372,15 @@ endif
 
    !BA_tot = sum(STAND_all(13,:))
    !BAr = STAND_all(13,:)/BA_tot
+   realised_dvol = 0. ! to aggregate realised damaged volume of affected layers
 
      ! perBAmort = 0.1
        ! write(1,*) "disturbance", year, pMort, perBAmort
-   do ij = 1 , nLayers     !loop Species xdo1
+   do layer = 1 , nLayers     !loop Species xdo1
 
-    BAmort = BAdist(ij)
+    BAmort = BAdist(layer)
     dN=0.d0
-    STAND=STAND_all(:,ij)
+    STAND=STAND_all(:,layer)
     species = int(stand(4))
     param = pCrobas(:,species)
     sitetype=STAND(3)
@@ -361,13 +482,13 @@ endif
 
 
     if(BAmort > 0.) then !check if mortality occurs UPDATE: only activated if there is no wind disturbance wdimp xif4
-!      if(BAmort(ij) > 0. .and. maxval(wriskLayers(:,1)) == 0) then !check if mortality occurs UPDATE: only activated if there is no wind disturbance wdimp
-      !dN = -Nold * (BAmort/(BA/BAr(ij)))
+!      if(BAmort(layer) > 0. .and. maxval(wriskLayers(:,1)) == 0) then !check if mortality occurs UPDATE: only activated if there is no wind disturbance wdimp
+      !dN = -Nold * (BAmort/(BA/BAr(layer)))
      dN = -Nold * (BAmort/BA)
 
     ! elseif(maxval(wriskLayers(:,1)) > 0) then !wdimp define dN based on layer-level disturbed ba
-    ! !  dN = -Nold * (BAmort/(BA/BAr(ij)))
-    !   dN = -Nold * (wriskLayers(ij,6)/BA) !disturbed layer ba/layer ba
+    ! !  dN = -Nold * (BAmort/(BA/BAr(layer)))
+    !   dN = -Nold * (wriskLayers(layer,6)/BA) !disturbed layer ba/layer ba
     else
       dN = 0.
     endif !xif4_end
@@ -403,6 +524,7 @@ endif
          W_crh = W_crh * N/Nold
          Wdb = Wdb * N/Nold
          W_stem = W_stem * N/Nold
+         realised_dvol = realised_dvol + V * (1-N/Nold) !aggregating realised damaged volume (could be reduced if sampled site-level damaged volume cannot be met by affected layers)
          V = V * N/Nold
          BA = BA * N/Nold
          wf_STKG = wf_STKG * N/Nold
@@ -415,7 +537,7 @@ endif
      STAND(31) = W_stem
      STAND(32) = W_croot
     !STAND(42) = Vold - V + STAND(42)!* min(1.,-dN*step/Nold)
-    STAND(42) = (Vold - V)*(1-pHarvTrees) + STAND(42)!* min(1.,-dN*step/Nold)
+    STAND(42) = (Vold - V)*(1-pHarvTrees) + STAND(42)!* min(1.,-dN*step/Nold) !!
      STAND(47) = W_wsap
      STAND(48) = W_c
      STAND(49) = W_s
@@ -426,15 +548,17 @@ endif
 !!!
 !! allocating salvage logging to current (regionPrebas harvlimit not met when site is checked or all mgmt switched off) or next year (some mgmt allowed / harvlimit exceeded)
 if(ClCut == 0. .and. defaultThin == 0.) then ! either mgmt switched off entirely or blocked due to harvest limit being met
-    !outt(42,ij,2) = outt(30,ij,2) + max((Vold-V)*pHarvTrees,0.)*harvRatio !salvnext save salvlogged layer-level vol here to be included in next year's harvest limit in regionPrebas (harvRatio otherwise applied when going from ,,30,,2 to ,,37,,1)
-    outt(42,ij,2) = max((Vold-V)*pHarvTrees,0.)*harvRatio !update replacing the above: outt(30,ij,2) shouldn't be included; in practice, this could carry over the year of disturbance salvage logging to the year AFTER the mgmt reaction... test!
+    !outt(42,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)*harvRatio !salvnext save salvlogged layer-level vol here to be included in next year's harvest limit in regionPrebas (harvRatio otherwise applied when going from ,,30,,2 to ,,37,,1)
+    outt(42,layer,2) = max((Vold-V)*pHarvTrees,0.)*harvRatio !update replacing the above: outt(30,layer,2) shouldn't be included; in practice, this could carry over the year of disturbance salvage logging to the year AFTER the mgmt reaction... test!
     ! cont.: by if condition, there can't be any harvests in this stand in this year anyway...
     outDist(year,10) = 2. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
 elseif(ClCut > 0. .or. defaultThin > 0.) then
-    outt(30,ij,2) = outt(30,ij,2) + max((Vold-V)*pHarvTrees,0.)
-    pHarvTrees = 0
+    outt(30,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)
+    !pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
     outDist(year,10) = 1. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
-
+    if(layer == nLayers) then
+    pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
+  endif ! solved (?) by only setting this for the last layer; test!!!
 
   endif !x6
 
@@ -451,9 +575,11 @@ elseif(ClCut > 0. .or. defaultThin > 0.) then
   endif !x5
 endif !
 !//activate
-    STAND_all(:,ij)=STAND
+    STAND_all(:,layer)=STAND
 endif
     end do !!!!!!!end loop layers xl1
+    outDist(year, 4)=realised_dvol !aggregated realised damaged volume (could be reduced if sampled site-level damaged volume exceeds affected layer V)
+
  endif !bamort>0... x3
 
 ! !  !

@@ -31,7 +31,7 @@
 #' @param energyCut
 #' @param inDclct
 #' @param inAclct
-#' @param inHclct 
+#' @param inHclct
 #' @param yassoRun
 #' @param smoothP0
 #' @param smoothETS
@@ -59,8 +59,8 @@
 #' @param SMIt0 site vector of initial SoilMoirture index
 #' @param TminTmax array(climaIDs,ndays,2) with daily Tmin Tmax values for each climID, Tmin and Tmax will be used to calculate the Nesterov Index that will be used in the fire risk calculations
 #' @param disturbanceON flag for activating disturbance modules. can be one of "wind", "fire",  "bb" or a combination of the three, ex. c("fire", "bb")
-#' @param CO2model CO2 model for PRELES. Default CO2model = 1 (Launaniemi) ; CO2model = 2 (Kolari) 
-#' 
+#' @param CO2model CO2 model for PRELES. Default CO2model = 1 (Launaniemi) ; CO2model = 2 (Kolari)
+#' @param siteInfoDist inputs for (wind) disturbance module, matrix(nSites, 13). variables: 1/"wspeed": maximum 10a return localised wind speed (m/s, Venäläinen et al. 2017), 2/"tsincethin_init": time since last thinning for initialisation (note: updated in simulations!), 3/"soiltype": 0=mineral soil, fine; 1=mineral soil, coarse; 2=peat;  4/"shallowsoil": 0=soildepth > 30cm, 1=soildepth<30cm; "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
 #' @return Initialize PREBAS and return an object list that can be inputted to multiPrebas and regionPrebas functions to run PREBAS
 #' @export
 #'
@@ -132,7 +132,7 @@ InitMultiSite <- function(nYearsMS,
 
   if(nrow(pCROBAS)!=nrow(pCROB)) stop(paste0("check that pCROBAS has",nrow(pCROB), "parameters, see pCROB to compare"))
   if(!CO2model %in% 1:2) stop(paste0("set CO2model 1 or 2"))
-  
+
   if(all(is.na(pPRELES))){
     pPRELES <- pPREL
     pPRELES[12:13] <- pCO2model[CO2model,]
@@ -141,6 +141,7 @@ InitMultiSite <- function(nYearsMS,
   if(all(is.na(tTapioPar))) tTapioPar <- tTapio[,1:ncol(pCROBAS),,]
   if(all(is.na(ftTapioPar))) ftTapioPar <- ftTapio[,1:ncol(pCROBAS),,]
   
+
   nSites <- length(nYearsMS)
   if(all(is.na(SMIt0))) SMIt0 = rep(-999,nSites)
 
@@ -188,7 +189,7 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
     siteInfo = matrix(c(1,1,3,160,0,0,20,3,3,413.,0.45,0.118),nSites,12,byrow = T) ###default values for nspecies and site type = 3
     siteInfo[,1] <- 1:nSites
   }
-  
+
   if(ingrowth){
     ingrowthStep <- 25
     # nTreeIngrowth <- 10
@@ -197,7 +198,7 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   }else{
     nIngrowthLayers = 0
   }
-  
+
   colnames(siteInfo) <- c("siteID", "climID", "siteType", "SWinit", "CWinit",
                           "SOGinit", "Sinit", "nLayers", "nSpecies", "soildepth",
                           "effective field capacity", "permanent wilting point")
@@ -237,9 +238,14 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   multiOut <- array(0, dim=c(nSites,(maxYears),nVar,maxNlayers,2),
                     dimnames = list(site=NULL,year=NULL,variable=varNam,layer=layerNam,
                                     status=c("stand","thinned")))
-  multiEnergyWood <- array(0, dim=c(nSites,(maxYears),maxNlayers,2),
+  multiEnergyWood <- array(0, dim=c(nSites,(maxYears),maxNlayers,17,3),
                            dimnames = list(site=NULL,year=NULL,layer=layerNam,
-                                           variable=c("volume","biomass")))
+                                           variable=c("v_harvested", "roundw_tot", "sawnwood", "pulpwood",
+                                                      "energywood_roundw", "energywood_tot", "energyw_stump",
+                                                      "stump_stem", "n_harvested", "d_harvested", "h_harvested",
+                                                      "qredfact", "stemwood_taper", "mgmt_type",
+                                                      "dummy1", "dummy2", "dummy3"),
+                                          assortmentclass=c("realised", "potential", "salvagelog"))) #jhassort
   initClearcut = initSeedling.def
   if (all(is.na(multiInitClearCut))) multiInitClearCut <- matrix(initClearcut,nSites,5,byrow = T)
   # multiInitClearCut <- cbind(multiInitClearCut,0.0008025897)
@@ -330,7 +336,7 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
     if(all(is.na(inHclct[i,]))) inHclct[i,] <- 999.99
   }
   clct_pars <- array(c(inDclct,inAclct,inHclct), dim = c(nSites, ncol(pCROBAS),3))
-  
+
   maxThin <- max(multiNthin)
   ###thinning if missing.  To improve
   if(all(is.na(multiThin)) & !ingrowth){
@@ -367,7 +373,7 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
       maxThin <- nIngrowthLayers
     }
   }
-  
+
   multiThin[is.na(multiThin)] <- -999
   
   for(i in 1:nSites){
@@ -420,7 +426,7 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
     multiInitVar[,3,] <- initClearcut[1]; multiInitVar[,4,] <- initClearcut[2]
     multiInitVar[,6,] <- initClearcut[4]
     multiInitVar[,2,] <- matrix(Ainits,nSites,(maxNlayers-nIngrowthLayers))
-    
+
     for(ikj in 1:(maxNlayers-nIngrowthLayers)){
       p_ksi <- pCROBAS[38,multiInitVar[,1,ikj]]
       p_rhof <- pCROBAS[15,multiInitVar[,1,ikj]]
@@ -629,13 +635,13 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
   ###fix initialization year
   if(!all(fixAinit == 0)){
     if(length(fixAinit)!=nSites) stop("check fixAinit needs to be a vector of length nSites")
-    siteX_ainit <- which(fixAinit>0) 
+    siteX_ainit <- which(fixAinit>0)
     multiInitClearCut[siteX_ainit,5] <- fixAinit[siteX_ainit]
     fixAinit[siteX_ainit] <- 1
     fixAinit[!siteX_ainit] <- 0
     multiOut[,1,7,1,2] <- fixAinit
-  } 
-  
+  }
+
   multiSiteInit <- list(
     multiOut = multiOut,
     multiEnergyWood = multiEnergyWood,
@@ -796,7 +802,7 @@ multiPrebas <- function(multiSiteInit,
                         yearFert=NULL,
                         deltaSiteTypeFert = 1,
                         oldLayer=0){
-  
+
   ###initialize siteType
   multiSiteInit$multiOut[,,3,,1] <- array(multiSiteInit$siteInfo[,3],
                                           dim=c(multiSiteInit$nSites,
@@ -813,15 +819,15 @@ multiPrebas <- function(multiSiteInit,
     }
   }
 
-  ###check and activate disturbance modules  
+  ###check and activate disturbance modules
   if(is.null(multiSiteInit$siteInfoDist)) siteInfoDist = NA
   if(!is.null(multiSiteInit$siteInfoDist)) siteInfoDist = multiSiteInit$siteInfoDist
   ####initialize disturbance module if exists
   dist_flag <- multiSiteInit$dist_flag
   if(all(is.na(siteInfoDist))){
     disturbanceON = FALSE
-    siteInfoDist = matrix(0,multiSiteInit$nSites,10)
-    
+    siteInfoDist = matrix(0,multiSiteInit$nSites,13)
+
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
     if(!dist_flag %in% c(1,12,13,123)){
@@ -832,13 +838,13 @@ multiPrebas <- function(multiSiteInit,
     siteInfoDist = as.matrix(multiSiteInit$siteInfoDist)
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }
-  dimnames(outDist) <-  list(site=NULL, year=NULL, 
+  dimnames(outDist) <-  list(site=NULL, year=NULL,
                              variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "domh"))
-  
+
   dimnames(siteInfoDist) <-  list(site=NULL,
-                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
-  
-  
+                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare", "assort_lat", "assort_lon", "assort_elevation"))
+
+
   #initialize alfar
   if(is.null(multiSiteInit$pCN_alfar)){
     for(ijj in 1:multiSiteInit$maxNlayers){
@@ -897,7 +903,7 @@ multiPrebas <- function(multiSiteInit,
                               multiSiteInit$CO2model,
                               0,### fixAinit
                               -777)) ###ingrowth flag
-  
+
 ###modify alphar if fertilization is included
 if(!is.null(yearFert)){
   nSites <- multiSiteInit$nSites
@@ -1054,7 +1060,7 @@ regionPrebas <- function(multiSiteInit,
   dist_flag <- multiSiteInit$dist_flag
   if(all(is.na(siteInfoDist))){
     disturbanceON = FALSE
-    siteInfoDist = matrix(0,multiSiteInit$nSites,10)
+    siteInfoDist = matrix(0,multiSiteInit$nSites,13)
 
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
@@ -1067,15 +1073,16 @@ regionPrebas <- function(multiSiteInit,
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }
   dimnames(outDist) <-  list(site=NULL, year=NULL,
-                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "domh"))
+                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "mgmt_harvlimcount"))
 
   dimnames(siteInfoDist) <-  list(site=NULL,
-                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
+                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare", "assort_lat", "assort_lon", "assort_elevation"))
 
 
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
   if(all(is.na(HarvLim))) HarvLim <- matrix(0.,multiSiteInit$maxYears,2)
-  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),6)
+
+  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),9) #jhassort added 3 elements (reg thin3, comp cc,
   compHarv <- c(compHarv,thinFact)
   if(ageHarvPrior > 0.){
     sitesCl1 <- which(multiSiteInit$siteInfo[,3]<3.5)
@@ -1347,7 +1354,7 @@ reStartRegionPrebas <- function(multiSiteInit,
   dist_flag <- multiSiteInit$dist_flag
   if(all(is.na(siteInfoDist))){
     disturbanceON = FALSE
-    siteInfoDist = matrix(0,multiSiteInit$nSites,10)
+    siteInfoDist = matrix(0,multiSiteInit$nSites,13)
 
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
@@ -1360,10 +1367,10 @@ reStartRegionPrebas <- function(multiSiteInit,
     outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }
   dimnames(outDist) <-  list(site=NULL, year=NULL,
-                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "domh"))
+                             variable=c("domspec", "tsincethin", "wrisk", "sevclass", "damvol", "reldamvol", "salvlog", "mgmtreact", "sevdistcc", "mgmt_harvlimcount"))
 
   dimnames(siteInfoDist) <-  list(site=NULL,
-                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare"))
+                                  variable=c("wspeed", "tsincethin_init", "soiltype", "shallowsoil", "salvlog_thresh", "salvlog_share", "pharvtrees", "mgmtreact_thresh", "mgmtreact_share", "sevdistccshare", "assort_lat", "assort_lon", "assort_elevation"))
 
 
 
@@ -1379,7 +1386,7 @@ reStartRegionPrebas <- function(multiSiteInit,
                               -777)) ###ingrowth flag
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
   if(all(is.na(HarvLim))) HarvLim <- matrix(0.,multiSiteInit$maxYears,2)
-  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),6)
+  if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),9) #jhassort added 3 elements (reg thin3, comp cc, comp thin)
   compHarv <- c(compHarv,thinFact)
   if(ageHarvPrior > 0.){
     sitesCl1 <- which(multiSiteInit$siteInfo[,3]<3.5)
