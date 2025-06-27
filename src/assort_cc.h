@@ -20,6 +20,10 @@ felled_croot = stand_all(32,ij) !NOTE: biomass!
 turnover_fw = stand_all(28,ij)  !NOTE: biomass!
 turnover_cw = stand_all(29,ij)  !NOTE: biomass!
 
+
+
+
+
 if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assortments (2)
 
 ! ###### HARVESTED ASSORTMENTs ROUTINE ###
@@ -33,7 +37,7 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
             INT(siteType), INT(peat), lat, lon, alt, ets, age)
 
 ! ENERGYWOOD & LITTER
-  if(energyCut==1.) then
+  if(energyCut>0.) then
   ! LITTER
       S_branch = S_branch + max(0.,(turnover_fw +&                          ! fwoody litter
       felled_branch * (1-energyRatio)))                                      ! coarse roots / fine part; NOTE: stumps not collected in thinnings
@@ -53,8 +57,8 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
     turnover_cw +&                                                      ! cwoody litter
     stem_assort(5)*par_rhow
     ! ENERGY WOOD COLLECTION = 0
-    energyWood(year,ij,6,1) = 0 ! energywood total // ADD STUMP, BRANCHES TO THIS !!
-    energyWood(year,ij,5,1) = 0 ! energywood from roundwood (used to meet harvest demand)
+    energyWood(year,ij,6,1) = 0. ! energywood total // ADD STUMP, BRANCHES TO THIS !!
+    energyWood(year,ij,5,1) = 0. ! energywood from roundwood (used to meet harvest demand)
   endif !energycut
 
   !###### STUMP COLLECTION ####################
@@ -94,9 +98,9 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
    energyWood(year,ij,12,1) = stem_assort(8) ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
    energyWood(year,ij,14,1) = 4.
 
-   stand_all(37,ij) = stem_assort(3) + stem_assort(4) + stem_assort(5) * 10
-  
-   stand_all(38,ij) = (stem_assort(3) + stem_assort(4) + stem_assort(5)) * par_rhow
+   stand_all(37,ij) = energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
+
+   stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
 
 ! GENERIC ASSORTMENTS, aV1
 else if(assortType==INT(1)) then
