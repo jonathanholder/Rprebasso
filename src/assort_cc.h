@@ -94,7 +94,9 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
    energyWood(year,ij,12,1) = stem_assort(8) ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
    energyWood(year,ij,14,1) = 4.
 
-   stand_all(37,ij) = stem_assort(3) + stem_assort(4)
+   stand_all(37,ij) = stem_assort(3) + stem_assort(4) + stem_assort(5) * 10
+  
+   stand_all(38,ij) = (stem_assort(3) + stem_assort(4) + stem_assort(5)) * par_rhow
 
 ! GENERIC ASSORTMENTS, aV1
 else if(assortType==INT(1)) then

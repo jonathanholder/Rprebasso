@@ -695,8 +695,8 @@ if(all(is.na(TsumSBBs))) TsumSBBs <- matrix(-999,nSites,4) #wdimpl
     TsumSBBs = TsumSBBs,
     siteInfoDist = siteInfoDist,
     dist_flag = dist_flag,
-    CO2model = CO2model
-    assorttype = assorttype
+    CO2model = CO2model,
+    assortType = assortType
   )
   return(multiSiteInit)
 }
@@ -821,7 +821,7 @@ multiPrebas <- function(multiSiteInit,
     disturbanceON = FALSE
     siteInfoDist = matrix(0,multiSiteInit$nSites,13)
 
-    outDist = array(0,dim^=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
+    outDist = array(0,dim=c(multiSiteInit$nSites,multiSiteInit$maxYears,10))
   }else{
     if(!dist_flag %in% c(1,12,13,123)){
       if(dist_flag==0) dist_flag = 1
@@ -896,7 +896,7 @@ multiPrebas <- function(multiSiteInit,
                               multiSiteInit$CO2model,
                               0,### fixAinit
                               -777, ###ingrowth flag
-                              assortType))
+                              multiSiteInit$assortType))
 
 ###modify alphar if fertilization is included
 if(!is.null(yearFert)){
@@ -1207,7 +1207,7 @@ regionPrebas <- function(multiSiteInit,
                               multiSiteInit$CO2model,
                               0,### fixAinit
                               -777, ##ingrowth flag
-                              assortType))
+                              multiSiteInit$assortType))
 
   prebas <- .Fortran("regionPrebas",
                      siteOrder = as.matrix(siteOrder),
@@ -1378,7 +1378,7 @@ reStartRegionPrebas <- function(multiSiteInit,
                               multiSiteInit$CO2model,
                               0,### fixAinit
                               -777,  ###ingrowth flag
-                              assortType))
+                              multiSiteInit$assortType))
     if(length(HarvLim)==2) HarvLim <- matrix(HarvLim,multiSiteInit$maxYears,2,byrow = T)
   if(all(is.na(HarvLim))) HarvLim <- matrix(0.,multiSiteInit$maxYears,2)
   if(all(is.na(cutAreas))) cutAreas <- matrix(-999.,(multiSiteInit$maxYears),9) #jhassort added 3 elements (reg thin3, comp cc, comp thin)

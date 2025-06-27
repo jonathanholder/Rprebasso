@@ -2027,7 +2027,8 @@ enddo !end year loop
 !update ETSstart
 ETSstart = ETSmean
 !soil and harvested volume outputs
-modOut(:,37,:,1) = modOut(:,30,:,2) * harvRatio!! harvRatio takes into account the residuals left in the soil
+
+!modOut(:,37,:,1) = modOut(:,30,:,2) * harvRatio!! harvRatio takes into account the residuals left in the soil
 modOut(:,38,:,1) = modOut(:,31,:,2) * harvRatio!! harvRatio takes into account the residuals left in the soil
 !!!!!!!!!!
 !! jhassort: below was in working assortment version, keep for reference for norway
@@ -2036,7 +2037,7 @@ modOut(:,38,:,1) = modOut(:,31,:,2) * harvRatio!! harvRatio takes into account t
 ! !soil and harvested volume outputs
 ! modOut(:,37,:,1) = modOut(:,30,:,2) * harvRatio!! harvRatio takes into account the residuals left in the soil
 ! modOut(:,38,:,1) = modOut(:,31,:,2) * harvRatio!! harvRatio takes into account the residuals left in the soil
-! modOut(:,37,:,1) = energyWood(:,:,4) + energyWood(:,:,5)!stemwood harvested as sawnwood + pulpwood (= roundwood removals, used to meet roundwood demand)
+! modOut(:,37,:,1) = energyWood(:,:,3,1) !+ energyWood(:,:,4,1) + energyWood(:,:,5,1) !stemwood harvested as sawnwood + pulpwood + energywood from roundwood
 ! if (assortType==2) then !jh ?? why here? overrides all else (before)
   !modOut(2:(nyears+1),37,:,1) = energyWood(:,:,4) + energyWood(:,:,5) !francesco!!
 !   modOut(:,37,:,1) = 42.

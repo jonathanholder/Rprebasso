@@ -81,9 +81,22 @@ multiWood(siteX,ij,ijj,12) = stem_assort(8) ! quality reduction factor (share of
 multiWood(siteX,ij,ijj,14) = multiWood(siteX,ij,ijj,14) + 20. !indicate type of mgmt: 1:3 = thinning types, 4=cc; comp_cc: +0.1, comp_thin: + 0.2
 multiWood(siteX,ij,ijj,15) = turnover_cw
 
-multiOut(siteX,ij,37,ijj,1) = multiOut(siteX,ij,37,ijj,1) + stem_assort(3) + stem_assort(4)
-multiOut(siteX,ij,38,ijj,1) = multiOut(siteX,ij,38,ijj,1) + (stem_assort(3) + stem_assort(4)) * par_rhow
+multiOut(siteX,ij,37,ijj,1) = multiOut(siteX,ij,37,ijj,1) + stem_assort(3) + stem_assort(4) + stem_assort(5)
+multiOut(siteX,ij,38,ijj,1) = multiOut(siteX,ij,38,ijj,1) + (stem_assort(3) + stem_assort(4) + stem_assort(5)) * par_rhow
 roundWood = roundWood + (stem_assort(3) + stem_assort(4))*areas(siteX) ! collecting variable used to meet roundwoood demand
+
+   !
+
+      ! ATTENTION: ABOVE 37/38 + RW PROCEDURE NEEDS TO BE ADJUSTED TO BELOW!
+      !
+      ! stand_all(37,ij) = energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
+      !
+      ! stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
+      !
+
+
+
+
 
 ! SIMPLE ASSORTMENTS (aV1)
 else if(assortType==INT(1)) then ! switch between generic (1) / advanced assortments (2)

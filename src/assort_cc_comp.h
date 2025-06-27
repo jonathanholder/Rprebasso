@@ -167,6 +167,20 @@ multiWood(siteX,ij,ijj,15) = energyCutX
 
 multiOut(siteX,ij,37,ijj,1) = multiOut(siteX,ij,37,ijj,1) + stem_assort(3) + stem_assort(4)
 multiOut(siteX,ij,38,ijj,1) = multiOut(siteX,ij,38,ijj,1) + (stem_assort(3) + stem_assort(4)) * par_rhow
+
+
+   ! ATTENTION: ABOVE 37/38 PROCEDURE NEEDS TO BE ADJUSTED TO BELOW!
+   !
+   ! stand_all(37,ij) = energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
+   !
+   ! stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
+   !
+
+
+
+
+
+
 roundWood = roundWood + (stem_assort(3) +stem_assort(4)) *areas(siteX) ! collecting variable used to meet roundwoood demand
     !NOTE: within assorttype, as this shouldn't be an aggregate of potential regular thinnings and comp ccs (double accounting of reg thin)
 

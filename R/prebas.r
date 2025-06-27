@@ -535,7 +535,7 @@ prebas <- function(nYears,
                             CO2model,
                             fixAinit,
                             -777, ###ingrowth flag
-                            assorttype)
+                            assorttype))
 
   ###modify alphar if fertilization is included
   if(!is.null(yearFert)){

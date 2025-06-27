@@ -110,8 +110,14 @@ if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assor
     energyWood(year,ij,12,1) = stem_assort(8)              ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
     energyWood(year,ij,14,1) = thinningType                   ! dummy for variable of interest
 
-    stand_all(37,ij) = stem_assort(3) + stem_assort(4)
 
+    stand_all(37,ij) = energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
+    stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
+
+
+
+
+    !!!!HERE 25-06-25!!!!!!! line above is where harvests are combined, question: should energywood from roundwood be included here??
 
 else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2)
 ! original energywood collection / litter calculations
