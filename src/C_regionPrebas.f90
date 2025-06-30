@@ -72,7 +72,7 @@ real (kind=8) :: minFapar,fAparFactor=0.9
  real (kind=8) :: UmaxFactor(nSites,maxYears,maxNlayers)
  integer :: etmodel, CO2model,gvRun, fertThin, oldLayer, ECMmod !not direct inputs anymore, but in prebasFlags !wdimpl pflags
  real (kind=8), intent(inout) :: siteInfoDist(nSites,13), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
- logical :: disturbance_wind ! necessary for wind disturbance to activate management reaction; might be needed for other agents' mgmt reaction as well
+ logical :: disturbance_wind, disturbance_bb ! necessary for wind disturbance to activate management reaction; might be needed for other agents' mgmt reaction as well
 
 
 
@@ -131,6 +131,7 @@ prebasFlags(9) = -777
 assorttype = prebasFlags(10)
 
 if(prebasFlags(6)==1 .or. prebasFlags(6)==12 .or. prebasFlags(6)==13 .or. prebasFlags(6)==123) disturbance_wind = .TRUE.
+if(prebasFlags(6)==2 .or. prebasFlags(6)==12 .or. prebasFlags(6)==23 .or. prebasFlags(6)==123) disturbance_bb = .TRUE.
 
 
 !!!!initialize run
@@ -222,7 +223,7 @@ do ij = startSimYear,maxYears
  ! towards current years roundwood aggregate. !s!wdimpl
  ! Note: salvage logging volumes only added to multiOut[,,37,,1] at the end of year loop to avoid double accounting
 
- if(ij>1 .and. disturbance_wind .eqv. .TRUE.) then
+ if(ij>1 .and. (disturbance_wind .or. disturbance_bb)) then
 !roundwood = sum(multiOut(:,(ij-1),42,:,2)) !  needs to account for area...
    do ijj = 1, nSites
      roundwood = roundwood + sum(multiOut(ijj,(ij-1),42,:,2))*areas(ijj)
@@ -255,7 +256,7 @@ endif
 
 
 ! prioritisation of disturbed sites earmarked for management reaction in siteOrder (from previous year)
-if (disturbance_wind .eqv. .TRUE.) then
+if (disturbance_wind .or. disturbance_bb) then
     if (ij > 1) then!call prioDistInSO(outDist(:, (ij-1), :), nSites, siteOrder(:,ij), siteorderX)
       !call prioDistInSO(outDist(:, (ij-1), :), nSites, siteOrder(:,ij))
      call prioDistInSO(outDist(:, (ij-1), :), nSites, maxYears, ij, siteOrder(:,:)) ! disable to test; does this alter ij??
@@ -1096,7 +1097,7 @@ endif !roundWood < HarvLim .and. HarvLim /= 0.
     ! open(1,file="test1.txt")
   ! write(1,*) ij, "end"
   ! close(1)
-   if (disturbance_wind .eqv. .TRUE. .and. ij>1) THEN !wdimpl
+  if ((disturbance_wind .or. disturbance_bb) .and. ij>1) THEN !wdimpl
      !output(1,37,1:nLayers(i),1) = multiOut(i,(ij-1),42,1:nLayers(i),2) !salvnext: allocate last year's 'parked' salvage logging to ,,37,,11
      multiOut(:,ij,37,:,1) = multiOut(:,ij,37,:,1) + multiOut(:,(ij-1),42,:,2)
   endif
