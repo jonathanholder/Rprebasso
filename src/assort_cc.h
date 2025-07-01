@@ -97,10 +97,9 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
    energyWood(year,ij,11,1) = h_harvested
    energyWood(year,ij,12,1) = stem_assort(8) ! quality reduction factor (share of potential sawnwood unfit for sawnwood processing)
    energyWood(year,ij,14,1) = 4.
-
-   stand_all(37,ij) = energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
-
-   stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
+!note below: needs to be additive, otherwise salvage logged v from same year is overwritten
+   stand_all(37,ij) = stand_all(37,ij) + energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
+   stand_all(38,ij) = stand_all(38,ij) + (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
 
 ! GENERIC ASSORTMENTS, aV1
 else if(assortType==INT(1)) then
