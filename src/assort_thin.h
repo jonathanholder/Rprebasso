@@ -46,7 +46,7 @@ turnover_cw = stand_all(29,ij)  !NOTE: biomass!
 ! # quality reduction of potential sawnwood based on Mehtätalo (2002)
 ! # + stump removal
 ! # NOTE: qred currently fixed to 0.3
-if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assortments (2)
+if(assortType>1.5) then ! between generic (1) / advanced assortments (2)
 
 ! ###### HARVESTED ASSORTMENTs ROUTINE ###
 ! ###### THINNINGS ###
@@ -112,14 +112,14 @@ if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assor
 
 
     stand_all(37,ij) = energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1) ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
-    stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
+   stand_all(38,ij) = (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
 
 
 
 
     !!!!HERE 25-06-25!!!!!!! line above is where harvests are combined, question: should energywood from roundwood be included here??
 
-else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2)
+else if(assortType<1.5) then ! between generic (1) / advanced assortments (2)
 ! original energywood collection / litter calculations
 ! NOTE: harvRatio will mean two different things for the two assortment complexities!!
 
@@ -128,7 +128,9 @@ else if(assortType==INT(1)) then ! between generic (1) / advanced assortments (2
       energyWood(year,ij,6,1) = energyWood(year,ij,6,1) + ((felled_branch + &
       felled_croot * 0.3)/par_rhow + &
       v_harvested * (1-harvRatio)) * energyRatio
-      energyWood(year,ij,5,1) = v_harvested * (1-harvRatio) * energyRatio
+      energyWood(year,ij,5,1) = 0.
+
+      !energyWood(year,ij,5,1) = v_harvested * (1-harvRatio) * energyRatio !attention: shouldn't be counted towards harvlim
 ! litter
       S_branch = max(0.,(S_branch + felled_branch * (1-energyRatio) +  &
       (0.3 * (1-energyRatio)+0.7) * felled_croot *0.83))

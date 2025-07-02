@@ -24,7 +24,7 @@ turnover_cw = stand_all(29,ij)  !NOTE: biomass!
 
 
 
-if(assortType==2 .or. assortType==3) then ! between generic (1) / advanced assortments (2)
+if(assortType>1.5) then ! between generic (1) / advanced assortments (2)
 
 ! ###### HARVESTED ASSORTMENTs ROUTINE ###
 ! ###### CLEARCUTS ###
@@ -102,14 +102,15 @@ call assort(INT(species), d_harvested, h_harvested, v_harvested, pharv, stem_ass
    stand_all(38,ij) = stand_all(38,ij) + (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) + energyWood(year,ij,5,1)) * par_rhow
 
 ! GENERIC ASSORTMENTS, aV1
-else if(assortType==INT(1)) then
+else if(assortType< 1.5 )then
 
   if(energyCut==1.) then
 ! energywood collection
     energyWood(year,ij,6,1) = energyWood(year,ij,6,1) + ((felled_branch + &
       felled_croot * 0.3)/par_rhow + &
       v_harvested * (1-harvRatio)) * energyRatio
-    energyWood(year,ij,5,1) = v_harvested * (1-harvRatio) * energyRatio
+      energyWood(year,ij,5,1) = 0.
+!  energyWood(year,ij,5,1) = v_harvested * (1-harvRatio) * energyRatio
 ! litter
     S_branch = max(0.,(S_branch + felled_branch * (1-energyRatio) +  &
       (0.3 * (1-energyRatio)+0.7) * felled_croot *0.83))
@@ -142,6 +143,8 @@ energyWood(year,ij,12,1) = 88.             ! quality reduction factor (share of 
 energyWood(year,ij,14,1) = 4.                    ! dummy for variable of interest
 
  !fill Vharvested with non-energy roundwood removals (to meet harvest demand)
- stand_all(37,ij) = v_harvested*harvRatio
+
+ stand_all(37,ij) = stand_all(37,ij) + energyWood(year,ij,3,1) + energyWood(year,ij,4,1)  ! all roundwood (sawn + pulp + energy); note: energywood from roundwood = (tot-sawn-pulp)*energyratio [currently 0.7]
+ stand_all(38,ij) = stand_all(38,ij) + (energyWood(year,ij,3,1) + energyWood(year,ij,4,1) ) * par_rhow
 
 endif !simple assortments

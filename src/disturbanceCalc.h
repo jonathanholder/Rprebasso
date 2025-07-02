@@ -572,12 +572,24 @@ elseif(assortType<1.5)then !original/simple roundwood estimate
   if(ClCut == 0. .and. defaultThin == 0.) then ! either mgmt switched off entirely or blocked due to harvest limit being met
       !outt(42,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)*harvRatio !salvnext save salvlogged layer-level vol here to be included in next year's harvest limit in regionPrebas (harvRatio otherwise applied when going from ,,30,,2 to ,,37,,1)
       outt(42,layer,2) = max((Vold-V)*pHarvTrees,0.)*harvRatio !update replacing the above: outt(30,layer,2) shouldn't be included; in practice, this could carry over the year of disturbance salvage logging to the year AFTER the mgmt reaction... test!
+
       ! cont.: by if condition, there can't be any harvests in this stand in this year anyway...
       outDist(year,10) = 2. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
+      energyWood(year,layer,3,1) = energyWood(year,layer,3,1) + (max((Vold-V)*pHarvTrees,0.)*harvRatio)/2      ! stump (100% abg, partially included in energywood if collected)
+      energyWood(year,layer,4,1) = energyWood(year,layer,4,1) + (max((Vold-V)*pHarvTrees,0.)*harvRatio)/2      ! stump (100% abg, partially included in energywood if collected)
+
+
+
+
   elseif(ClCut > 0. .or. defaultThin > 0.) then
-      outt(30,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)
+      STAND(37) = STAND(37) + max((Vold-V)*pHarvTrees,0.)*harvRatio
+
+      !outt(30,layer,2) = outt(30,layer,2) + max((Vold-V)*pHarvTrees,0.)
       !pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
       outDist(year,10) = 1. ! test flag to check if harvlim is met when doing mgmt reaction/salvage logging
+      energyWood(year,layer,3,1) = energyWood(year,layer,3,1) + (max((Vold-V)*pHarvTrees,0.)*harvRatio)/2      ! stump (100% abg, partially included in energywood if collected)
+      energyWood(year,layer,4,1) = energyWood(year,layer,4,1) + (max((Vold-V)*pHarvTrees,0.)*harvRatio)/2      ! stump (100% abg, partially included in energywood if collected)
+
       if(layer == nLayers) then
         pHarvTrees = 0. ! ATTENTION: this switches off salvage logging for consectutive layers, WE ARE IN A LAYER LOOP!!!
       endif ! solved (?) by only setting this for the last layer; test!!!
