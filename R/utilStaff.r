@@ -1,3 +1,75 @@
+###function to select subset sites in a initPrebas object.
+###useful to test the model locally . you can select few sites and reinitilize the model just for those sites to get lighter computational load
+#' Title
+#'
+#' @param initPrebas multisite Initialization object
+#' @param sitex sites to be selected
+#'
+#' @returns a multisite prebas initialization object with just the sitex sites
+#' @export
+#'
+#' @examples
+initPrebas_subsetter <- function(initPrebas,sitex){
+  notsubset <- c("nSites", "nClimID", "maxYears",
+                 "maxThin","pCROBAS", "allSp","maxNlayers",
+                 "ETSy", "P0y", "weather", "DOY", "pPRELES", "etmodel", 
+                 "pYASSO",  "pAWEN",   "weatherYasso",
+                 "litterSize","smoothP0","smoothETS", "tapioPars", 
+                 "ftTapioPar","tTapioPar", "GVrun",
+                 "mortMod", "ECMmod",  "pECMmod",
+                 "layerPRELES", "LUEtrees","LUEgv",  
+                 "alpharNcalc", "siteInfoDist", 
+                 "dist_flag", "CO2model" )
+  
+  # Subset all elements except 'notX'
+  subset_initPrebas <- lapply(names(initPrebas), function(name) {
+    x <- initPrebas[[name]]
+    if (!name %in% notsubset) {
+      if (is.vector(x)) {
+        x = x[sitex]
+      } else if (length(dim(x))==2) {
+        x = x[sitex,, drop = FALSE]
+      } else if (length(dim(x))==3) {
+        x = x[sitex,,, drop = FALSE]
+      } else if (length(dim(x))==4) {
+        x = x[sitex,,,, drop = FALSE]
+      } else if (length(dim(x))==5) {
+        x = x[sitex,,,,, drop = FALSE]
+      }
+    }
+    return(x)
+  })
+
+  # Preserve names
+  names(subset_initPrebas) <- names(initPrebas)
+  
+  subset_initPrebas$nSites <- dim(subset_initPrebas$multiOut)[1]
+  # process weather inputs
+  subset_initPrebas$nClimID <- length(unique(subset_initPrebas$siteInfo[,2]))
+  climIDsunique <- sort(unique(subset_initPrebas$siteInfo[,2]))
+  if(length(climIDsunique)==1){
+    subset_initPrebas$siteInfo[,2] <- match(subset_initPrebas$siteInfo[,2], climIDsunique)
+    subset_initPrebas$siteInfo[2,2] <- 2
+    climIDsunique <- c(climIDsunique,climIDsunique)
+    subset_initPrebas$ETSy <- subset_initPrebas$ETSy[climIDsunique,]
+    subset_initPrebas$P0y <- subset_initPrebas$P0y[climIDsunique,,]
+    subset_initPrebas$weather <- subset_initPrebas$weather[climIDsunique,,,]
+    subset_initPrebas$weatherYasso <- subset_initPrebas$weatherYasso[climIDsunique,,]
+  }else{
+    subset_initPrebas$siteInfo[,2] <- match(subset_initPrebas$siteInfo[,2], climIDsunique)
+    subset_initPrebas$ETSy <- subset_initPrebas$ETSy[climIDsunique,]
+    subset_initPrebas$P0y <- subset_initPrebas$P0y[climIDsunique,,]
+    subset_initPrebas$weather <- subset_initPrebas$weather[climIDsunique,,,]
+    subset_initPrebas$weatherYasso <- subset_initPrebas$weatherYasso[climIDsunique,,]
+  }
+  
+  subset_initPrebas$maxYears <- max(subset_initPrebas$nYears)
+  subset_initPrebas$maxThin <- max(subset_initPrebas$nThinning)
+  subset_initPrebas$thinning <- subset_initPrebas$thinning[,1:subset_initPrebas$maxThin,]
+  subset_initPrebas$maxNlayers <- max(subset_initPrebas$nLayers)
+  return(subset_initPrebas)
+}
+
 ###regression model for the drained peatland forested sites (paper reference)
 peat_regression_model <- function(BA,Tseason,siteType,peat_reg_pars=peat_regression_pars,maxsiteType = 5){
   siteType <- min(siteType,maxsiteType)
@@ -20,7 +92,7 @@ peat_regression_model_multiSite <- function(modOut,peat_sites,peat_regr_pars=pea
     BA <- apply(modOut$multiOut[peat_sites,,13,,1],1:2,sum)
   }
   
-  Tseason <- apply(modOut$weather[peat_sites,,121:304,2],1:2,mean)
+  Tseason <- apply(modOut$weather[modOut$siteInfo[peat_sites,"climID"],,121:304,2],1:2,mean)
   
   Rh_peat <- peat_regression_model(BA,Tseason,siteTypes,peat_regr_pars,max_siteType) * 12/44 #converts CO2 equivalents to gC m-2-y
   Rh_mineral <- apply(modOut$multiOut[peat_sites,,45,,1],1:2,sum)
@@ -95,7 +167,7 @@ initBiomasses <- function(pCro,initVarX){
   initVarX<-as.matrix(initVarX) #change vector to matrix when maxlayer=1
   siteType <- initVarX[8,1]
   par_alfar0 <- initVarX[9,]
-  layerXs <- which(initVarX[1,] %in% 1:ncol(pCROB))
+  layerXs <- which(initVarX[1,] %in% 1:ncol(pCro))
   ##set parameters
   par_betab <- pCro[13,initVarX[1,layerXs]]
   par_x <- pCro[19,initVarX[1,layerXs]]
@@ -148,7 +220,7 @@ initBiomasses <- function(pCro,initVarX){
   V = W_stem / par_rhow
   biomassesX <- rbind(wf_STKG,W_froot,W_wsap,W_c,W_s,W_branch,W_croot,Wsh,Wdb,W_stem,V,W_crh)
   biomasses<-matrix(0,nrow = nrow(biomassesX), ncol = ncol(initVarX))
-  biomasses[,layerXs]<-biomassesX
+  biomasses[,layerXs]<-as.matrix(biomassesX)
   # biomasses[which(is.na(biomasses))] <- 0.
   return(biomasses)
 }

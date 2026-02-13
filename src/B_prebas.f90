@@ -66,7 +66,7 @@ REAL (kind=8):: BAdist(nLayers) !disturbed BA per layer
  real (kind=8), intent(inout) :: fAPAR(nYears), GVout(nYears, 5) ! GVout contains: fAPAR_gv, litGV, photoGV, Wgv,GVnpp !!! ground vegetation
  real (kind=8), intent(inout) :: dailyPRELES((nYears*365), 3) ! GPP, ET, SW
  real (kind=8), intent(inout) :: initVar(7, nLayers), P0y(nYears,2), ETSy(nYears), initCLcutRatio(nLayers), ETSstart ! initCLcutRatio sets the initial layer compositions after clearcut
- real (kind=8), intent(inout) :: siteInfo(10)
+ real (kind=8), intent(inout) :: siteInfo(11)
  real (kind=8), intent(inout) :: output(nYears, nVar, nLayers, 2), energyWood(nYears, nLayers, 2) ! last dimension: 1 is for stand and 2 is for harvested sum of wood.
  real (kind=8), intent(inout) :: soilCinOut(nYears, 5, 3, nLayers), soilCtotInOut(nYears) ! dimensions: nyears, AWENH, woody/fineWoody/foliage, layers
  real (kind=8), intent(inout) :: pYasso(35), weatherYasso(nYears,3), litterSize(3, nSp) ! litterSize dimensions: treeOrgans, species
@@ -146,12 +146,13 @@ real (kind=8) :: Nmort, BAmort, VmortDist(nLayers)
  real (kind=8) :: pHarvTrees, hW_branch, hW_croot, hW_stem, hWdb
  real (kind=8) :: remhW_branch, remhW_croot,remhW_stem,remhWdb
  integer :: CO2model, AinitFix,etmodel, gvRun, fertThin, ECMmod, oldLayer !not direct inputs anymore, but in prebasFlags fvec
-integer, intent(inout) :: prebasFlags(9)
+ integer, intent(inout) :: prebasFlags(10)
+ integer :: FDIout
 
  !fire disturbances
  real (kind=8) :: dailySW(365)
  real (kind=8) :: Cpool_litter_wood,Cpool_litter_green,livegrass,soil_moisture(365)
- real (kind=8) :: Tmin(365),Tmax(365),FDI(365), NI((nYears*365)),n_fire_year
+ real (kind=8) :: Tmin(365),Tmax(365),FDI(365), NI((nYears*365)),n_fire_year,lightnings(nYears*365),popden(nYears*365),a_nd
  !BB disturbances
  real (kind=8) :: spruceStandVars(3),pBB(5), SMI, SMIt0,SHI,intenSpruce,rBAspruce(nLAyers) !SMIt0 = SMI previous year
 ! real (kind=8) :: rBAspruce(nLAyers), spruceStandVars(3),pBB(5), SMI, SMIt0, intenSpruce, SHI !SMIt0 = SMI previous year
@@ -164,6 +165,7 @@ oldLayer = int(prebasFlags(4))
 ECMmod = int(prebasFlags(5))
 CO2model = int(prebasFlags(7))
 AinitFix = int(prebasFlags(8))
+FDIout = int(prebasFlags(10))
 
 !!set disturbance flags
 ! set all dist to 0 and then choose based on flag
@@ -201,10 +203,17 @@ endif
   ! open(2,file="test2.txt")
 
 !###initialize model###!
+popden(:) = dailyPRELES(:,1) !read population density and reset to 0 the dailyPreles output
+dailyPRELES(:,1) = 0.0
+lightnings(:) = dailyPRELES(:,2) !read daily lightnings and reset to 0 the dailyPreles output
+dailyPRELES(:,2) = 0.0
 NI(:) = dailyPRELES(:,3) !read nestorov index and reset to -999 the dailyPreles output
 dailyPRELES(:,3) = -999.0
+a_nd = output(1,47,1,2)
 SMIt0 = output(1,46,1,2) !initialize SMI previous year
 output(1,46,1,2) = 0.d0
+output(1,47,1,2) = 0.d0
+
 lastGVout = 0.
 thinClx = 0.
 energyWood = 0.
@@ -218,6 +227,7 @@ soilC = 0.
 countThinning = 1
 pars = pPRELES
 pars(1:3) = siteInfo(8:10)
+pars(4) = siteInfo(11)
 soilC(1,:,:,:) = soilCinout(1,:,:,:)
 pars(24) = siteInfo(4)!SWinit
 pars(25) = siteInfo(5)!CWinit
@@ -240,8 +250,8 @@ ETSmean = ETSstart !initialise ETSmean using the starting value
  ! modOut(1,17,:,1) = modOut(1,13,:,1)/(pi*((modOut(1,12,:,1)/2/100)**2))
  ! modOut(1,35,:,1) =  modOut(1,13,:,1)/modOut(1,17,:,1)
  !init siteType
- modOut(1,3,:,:) = output(1,3,:,:) ! assign site type and alfar
- modOut(2:nYears,3,:,:) = output(:,3,:,:) ! assign site type and alfar
+ modOut((nYears+1),3,:,:) = output(nYears,3,:,:) ! assign site type and alfar
+ modOut(1:nYears,3,:,:) = output(:,3,:,:) ! assign site type and alfar
  soilCtot(1) = sum(soilC(1,:,:,:)) !assign initial soilC
  modOut(:,45,:,1) = 0. !set heterotrophic respiration to 0
 
@@ -1912,11 +1922,13 @@ modOut(year+1,5,1,2) = ETSmean
   Tmax = weatherPRELES(year,:,2) + 3.7
 
 FDI(:) = 0. 
-  call fireDist(Cpool_litter_wood,Cpool_litter_green,livegrass,soil_moisture, & 
-    weatherPRELES(year,:,2),NI((1+((year-1)*365)):(365*year)),weatherPRELES(year,:,4),FDI,n_fire_year)
+  call fireDist(Cpool_litter_wood,Cpool_litter_green,livegrass,soil_moisture, &
+    weatherPRELES(year,:,2),NI((1+((year-1)*365)):(365*year)),weatherPRELES(year,:,4),&
+      FDI,n_fire_year,latitude,lightnings,popden,a_nd)
 
   modOut((year+1),47,:,2) = 0.
   modOut((year+1),47,1,2) = n_fire_year !maxval(FDI)
+  if(FDIout .eq. 1) dailyPRELES((1+((year-1)*365)):(365*year),3) = FDI
  ! endif
 
 

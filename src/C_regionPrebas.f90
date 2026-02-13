@@ -29,7 +29,7 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5),minDharv,ageM
  real (kind=8), intent(in) :: tapioPars(5,2,3,20),thdPer(nSites),limPer(nSites)
  real (kind=8), intent(inout) :: tTapio(5,allSP,2,7), ftTapio(5,allSP,3,7),mortMod(2), latitude(nSites),P00CN(nSites)
  real (kind=8), intent(inout) :: TsumSBBs(nSites,4)
- real (kind=8), intent(inout) :: siteInfo(nSites,10), areas(nSites),HarvLim(maxYears,2)
+ real (kind=8), intent(inout) :: siteInfo(nSites,11), areas(nSites),HarvLim(maxYears,2)
  real (kind=8), intent(in) :: thinning(nSites,maxThin,11),pAWEN(12,allSP)
  real (kind=8), intent(inout) :: dailyPRELES(nSites,(maxYears*365),3)
  real (kind=8), intent(inout) :: initClearcut(nSites,5),fixBAinitClarcut(nSites),initCLcutRatio(nSites,maxNlayers)  !initial stand conditions after clear cut. (H,D,totBA,Hc,Ainit)
@@ -73,7 +73,7 @@ real (kind=8) :: minFapar,fAparFactor=0.9
  real (kind=8), intent(inout) :: siteInfoDist(nSites,10), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules !wdimpl
  logical :: disturbance_wind, disturbance_bb ! necessary for wind disturbance to activate management reaction; might be needed for other agents' mgmt reaction as well
 
- integer, intent(inout) :: prebasFlags(9)
+ integer, intent(inout) :: prebasFlags(10)
 
 !!! 'un-vectorise' flags, fvec
 etmodel = prebasFlags(1)

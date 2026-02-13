@@ -22,7 +22,7 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5)
 integer, intent(in) :: DOY(365) !, etmodel,ECMmod !wdimpl pflags
 real (kind=8), intent(in) :: pPRELES(30),pCrobas(npar,allSP),tapioPars(5,2,3,20),pECMmod(12)
 real (kind=8), intent(inout) :: tTapio(5,allSP,2,7), ftTapio(5,allSP,3,7),mortMod(2)
-real (kind=8), intent(inout) :: siteInfo(nSites,10),thdPer(nSites),limPer(nSites), latitude(nSites),P00CN(nSites)
+real (kind=8), intent(inout) :: siteInfo(nSites,11),thdPer(nSites),limPer(nSites), latitude(nSites),P00CN(nSites)
 real (kind=8), intent(inout) :: TsumSBBs(nSites,4)
 real (kind=8), intent(in) :: thinning(nSites,maxThin,11),pAWEN(12,allSP)
 real (kind=8), intent(inout) :: dailyPRELES(nSites,(maxYears*365),3)
@@ -55,7 +55,7 @@ real (kind=8) :: ClCutX, HarvArea,defaultThinX,maxState(nSites),check(maxYears),
 integer :: maxYearSite = 300,yearX(nSites),Ainit,sitex,ops(1),species
 
 integer :: etmodel,CO2model, gvRun, fertThin, ECMmod, oldLayer !not direct inputs anymore, but in prebasFlags fvec !wdimpl pflags
-integer, intent(inout) :: prebasFlags(9)
+integer, intent(inout) :: prebasFlags(10)
 
 !!! 'un-vectorise' flags, fvec
 etmodel = prebasFlags(1)
