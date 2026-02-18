@@ -26,6 +26,7 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5),minDharv,ageM
  real (kind=8), intent(in) :: pPRELES(30),pCrobas(npar,allSP),pECMmod(12)
 !cuttingArea columns are clcutA target(1) simuation(2);tending target(3), sim(4);firstThin targ(5) sim(6)
  real (kind=8), intent(inout) :: compHarv(2),cuttingArea(maxYears,6)
+ real (kind=8) :: cclimiter, totharv_cc !cclim
  real (kind=8), intent(in) :: tapioPars(5,2,3,20),thdPer(nSites),limPer(nSites)
  real (kind=8), intent(inout) :: tTapio(5,allSP,2,7), ftTapio(5,allSP,3,7),mortMod(2), latitude(nSites),P00CN(nSites)
  real (kind=8), intent(inout) :: TsumSBBs(nSites,4)
@@ -156,6 +157,16 @@ do ij = startSimYear,maxYears
   !initialize annual harvest
  roundWood = 0.
  energyWood = 0.  !!energCuts
+ totharv_cc = 0.!cclim
+
+ cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
+if(cuttingArea(ij, 1) < -0.000001 .AND. cuttingArea(ij, 1) > -1.000001) then !retrieve from cuttingArea[1,] if in range -1:-0.000001 
+  cclimiter = cuttingArea(ij, 1) * -1.
+endif
+
+
+
+
  ! if Harvlim is between 0 and 10 calculates the Harvest limit as % of net growth
  if(HarvLim(ij,1)>0. .and. HarvLim(ij,1)<10.) then
   if(ij==1) then
@@ -279,6 +290,12 @@ endif
     if (cuttingArea(ij,1) > 0. .and. cuttingArea(ij,2) > cuttingArea(ij,1)) then !!!swithch off clear cuts if threshold area (cuttingArea(1)), has been reached
    ClCutX = 0.
   endif
+  if (totharv_cc > HarvLim(ij,1)*cclimiter) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
+     ClCutX = 0.
+  endif
+
+
+
   if (HarvLim(ij,1) > 0. .and. roundWood >= HarvLim(ij,1)) then
    ClCutX = 0.
    defaultThinX = 0.
@@ -499,6 +516,8 @@ endif
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
+    totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
+
   endif
  end do !iz i site loop
 
@@ -572,6 +591,8 @@ endif
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
      roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !!energCuts
+     totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
+
      multiOut(siteX,ij,37,:,1) = multiOut(siteX,ij,37,1:jj,1) + &
       multiOut(siteX,ij,30,1:jj,1)*harvRatio
      multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
@@ -844,6 +865,8 @@ endif
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
      roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !!energCuts
+     totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
+
      multiOut(siteX,ij,37,:,1) = multiOut(siteX,ij,37,1:jj,1) + &
       multiOut(siteX,ij,30,1:jj,1)*harvRatio
      multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
