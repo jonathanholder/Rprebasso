@@ -182,6 +182,7 @@ do ij = startSimYear,maxYears
  cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
  if(cuttingArea(ij, 1) > 0.000001 .AND. cuttingArea(ij, 1) < 1.000001) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
    cclimiter = cuttingArea(ij, 1)
+   cuttingArea(ij, 1) = -999.
  endif
 
 
