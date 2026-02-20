@@ -150,7 +150,7 @@ else
 endif
 
 do ij = startSimYear,maxYears
-    ! open(1,file="test1.txt")
+     open(1,file="test1.txt")
   ! write(1,*) ij, "start"
   ! close(1)
 
@@ -160,9 +160,13 @@ do ij = startSimYear,maxYears
  totharv_cc = 0.!cclim
 
  cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
-if(cuttingArea(ij, 1) < -0.000001 .AND. cuttingArea(ij, 1) > -1.000001) then !retrieve from cuttingArea[1,] if in range -1:-0.000001 
-  cclimiter = cuttingArea(ij, 1) * -1.
+if(cuttingArea(ij, 1) > 0.000001 .AND. cuttingArea(ij, 1) < 1.00001) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
+  cclimiter = cuttingArea(ij, 1)
+  cuttingArea(ij, 1) = -999.9
+
+   write(1,*) cclimiter, "=cclim"
 endif
+write(1,*) cclimiter, "=cclim, ext"
 
 
 
@@ -1137,7 +1141,7 @@ soilCinOut = soilC
 soilCtotInOut = soilCtot
     ! open(1,file="test1.txt")
   ! write(1,*) i,ij,ijj,nSites, "end"
-  ! close(1)
+   close(1)
 
 end subroutine
 

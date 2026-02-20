@@ -9,6 +9,7 @@ regionPrebas(
   HarvLim = NA,
   minDharv = 999,
   cutAreas = NA,
+  clcutlimiter = NA,
   compHarv = 0,
   thinFact = 0.25,
   ageHarvPrior = 0,
@@ -22,6 +23,8 @@ regionPrebas(
 )
 }
 \arguments{
+\item{clcutlimiter}{max share of harvested volume from clear cuts (range 0:1). Remainder towards harvLim is then filled by thinnings. Length either 1 or maxYears.}
+
 \item{startSimYear}{}
 }
 \description{
