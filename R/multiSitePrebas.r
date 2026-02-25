@@ -1027,7 +1027,7 @@ regionPrebas <- function(multiSiteInit,
   
   if(all(!is.na(clcutlimiter))){ # if clcutlimiter is given as input, replace clearcut area limits with it (less objects passed to fortran, would be in conflict anyway)
     warning("clcutlimiter input given, superseedes cutArea limits for clearcuts!")
-    if(length(clcutlimiter > 1) & length(clcutlimiter)<multiSiteInit$maxYears) stop("clcutlimiter neither of length 1 nor n years")
+    if(length(clcutlimiter) > 1 & length(clcutlimiter)<multiSiteInit$maxYears) stop("clcutlimiter neither of length 1 nor n years")
     if(length(clcutlimiter) == 1) clcutlimiter <- rep(clcutlimiter, multiSiteInit$maxYears)
     cutAreas[,1] <- clcutlimiter
   } 
