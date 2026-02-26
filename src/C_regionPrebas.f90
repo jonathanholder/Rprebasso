@@ -591,6 +591,7 @@ endif
   if(isnan(sum(output(1,37,1:nLayers(i),1)))) then
     roundWood = roundWood
     energyWood = energyWood
+    totharv_cc = totharv_cc
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
