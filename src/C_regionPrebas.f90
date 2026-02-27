@@ -179,11 +179,19 @@ do ij = startSimYear,maxYears
 
 !cclimiter: limit share of harvested V obtained from clearcuts. input from cuttingArea[,1], converted from -1:-0.00001 to 0.00001:1. 1= no limitations, 0.8 = 80% of harvested V can be obtained from ccs.
  totharv_cc = 0.!cclim
- cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
- if(cuttingArea(ij, 1) > 0.01 .AND. cuttingArea(ij, 1) < 1.01) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
-   cclimiter = cuttingArea(ij, 1)
-   cuttingArea(ij, 1) = -999.9
- endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!! TROUBLESHOOTING !!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! below outcommented, cclimiter hardcoded above to check if input precdure produces instability
+cclimiter = 0.8 !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
+
+ !cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
+ ! if(cuttingArea(ij, 1) > 0.01 .AND. cuttingArea(ij, 1) < 1.01) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
+ !   cclimiter = cuttingArea(ij, 1)
+ !   cuttingArea(ij, 1) = -999.9
+ ! endif
 
 
 ! if Harvlim is between 0 and 10 calculates the Harvest limit as % of net growth
