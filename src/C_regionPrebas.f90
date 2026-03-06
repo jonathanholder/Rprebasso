@@ -258,7 +258,7 @@ endif
 
 ! prioritisation of disturbed sites earmarked for management reaction in siteOrder (from previous year)
 if (disturbance_wind .eqv. .TRUE.) then
-    if (ij > 1) then!call prioDistInSO(outDist(:, (ij-1), :), nSites, siteOrder(:,ij), siteorderX)
+    if (ij > 1.) then!call prioDistInSO(outDist(:, (ij-1), :), nSites, siteOrder(:,ij), siteorderX)
       !call prioDistInSO(outDist(:, (ij-1), :), nSites, siteOrder(:,ij))
      call prioDistInSO(outDist(:, (ij-1), :), nSites, maxYears, ij, siteOrder(:,:)) ! disable to test; does this alter ij??
 !siteOrder(:,ij) = siteOrderX
@@ -350,6 +350,7 @@ endif
   endif
   if (totharv_cc > HarvLim(ij,1)*cclimiter) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
        ClCutX = 0.
+
   endif
 
 
@@ -488,7 +489,7 @@ endif
    endif
 
 
-   if(Clcut(i) < 0) then !protected area / unmanaged site flag: Clcut = -1, needs to override setting to 0 to block tapio mgmt above in order to also block salvage logging/mgmtreaction to disturbances
+   if(Clcut(i) < 0.) then !protected area / unmanaged site flag: Clcut = -1, needs to override setting to 0 to block tapio mgmt above in order to also block salvage logging/mgmtreaction to disturbances
      ClCutX = Clcut(i)
    endif
 
@@ -499,7 +500,7 @@ endif
   if(ij>1) then
    output(1,46,1,2) = multiOut(i,(ij-1),46,1,2) !!SMI previous year, used in bark beetle intensity calculation
   endif
-
+    output(1,37,:,:)=0.
     call prebas(1,nLayers(i),allSP,siteInfo(i,:),pCrobas,initVar(i,:,1:nLayers(i)),&
     thinningX(1:az,:),output(1,:,1:nLayers(i),:),az,maxYearSite,fAPAR(i,ij),initClearcut(i,:),&
     fixBAinitClarcut(i),initCLcutRatio(i,1:nLayers(i)),ETSy(climID,ij),P0y(climID,ij,:),&
@@ -604,6 +605,7 @@ endif
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
     totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
+    outDist(i, ij, :)
   endif
  end do !iz i site loop
 
