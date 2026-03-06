@@ -348,8 +348,9 @@ endif
   if ((cuttingArea(ij,1) > 0. .and. cuttingArea(ij,2) > cuttingArea(ij,1)) .or. (cuttingArea(ij,1) < -1000.)) then !!!swithch off clear cuts if threshold area (cuttingArea(1)), has been reached
    ClCutX = 0.
   endif
-  if (totharv_cc > HarvLim(ij,1)*cclimiter) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
+  if (totharv_cc >= HarvLim(ij,1)*cclimiter) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
        ClCutX = 0.
+       outDist(i, ij, 1) = 353. !cclim indicate triggering
 
   endif
 
@@ -357,6 +358,8 @@ endif
   if (HarvLim(ij,1) > 0. .and. roundWood >= HarvLim(ij,1)) then
    ClCutX = 0.
    defaultThinX = 0.
+   outDist(i, ij, 1) = 361. !cclim indicate triggering
+
   endif
   if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
    energyCutX = 0.
@@ -504,7 +507,6 @@ endif
   !! BUGFIXING CCLIMITER
     output(1,37,:,:)=0.
     outDist(i, ij, 10) = totharv_cc
-    outDist(i, ij, 4) = ClCutX
 !!/ BUGFIXING CCLIMITER
 
     call prebas(1,nLayers(i),allSP,siteInfo(i,:),pCrobas,initVar(i,:,1:nLayers(i)),&
