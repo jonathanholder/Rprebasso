@@ -185,13 +185,13 @@ do ij = startSimYear,maxYears
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! below outcommented, cclimiter hardcoded above to check if input precdure produces instability
-cclimiter = 0.8 !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
+!cclimiter = 0.8 !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
 
- !cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
- ! if(cuttingArea(ij, 1) > 0.01 .AND. cuttingArea(ij, 1) < 1.01) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
- !   cclimiter = cuttingArea(ij, 1)
- !   cuttingArea(ij, 1) = -999.9
- ! endif
+ cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
+ if(cuttingArea(ij, 1) > 0.01 .AND. cuttingArea(ij, 1) < 1.01) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
+   cclimiter = cuttingArea(ij, 1)
+   cuttingArea(ij, 1) = -999.5
+ endif
 
 
 ! if Harvlim is between 0 and 10 calculates the Harvest limit as % of net growth
@@ -348,12 +348,17 @@ endif
   if ((cuttingArea(ij,1) > 0. .and. cuttingArea(ij,2) > cuttingArea(ij,1)) .or. (cuttingArea(ij,1) < -1000.)) then !!!swithch off clear cuts if threshold area (cuttingArea(1)), has been reached
    ClCutX = 0.
   endif
-  if (totharv_cc > (HarvLim(ij,1)*cclimiter)) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
-       ClCutX = 0.
-       outDist(i, ij, 1) = 353. !cclim indicate triggering
-
+  ! if (totharv_cc > (HarvLim(ij,1)*cclimiter)) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
+  !      ClCutX = 0.
+  !      outDist(i, ij, 1) = 353. !cclim indicate triggering
+  !
+  ! endif
+  if (HarvLim(ij,1) > 0.) then !!! safeguard for HarvLim=0
+      if (totharv_cc > HarvLim(ij,1) * cclimiter) then    !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
+          ClCutX = 0.
+          outDist(i, ij, 1) = 353.
+      endif
   endif
-
 
   if (HarvLim(ij,1) > 0. .and. roundWood >= HarvLim(ij,1)) then
    ClCutX = 0.
