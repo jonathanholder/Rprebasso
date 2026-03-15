@@ -91,6 +91,14 @@ real (kind=8) :: minFapar,fAparFactor=0.9
  integer :: etmodel, CO2model,gvRun, fertThin, oldLayer, ECMmod !not direct inputs anymore, but in prebasFlags !wdimpl pflags
  integer, intent(inout) :: prebasFlags(10)
 
+
+! =====================[ DEBUG ]=====================+
+! Temporary per-site clearcut occurrence flag used only for diagnostics+
+logical :: cc_occ
+! ===================================================
+
+
+
 !!! 'un-vectorise' flags, fvec
 etmodel = prebasFlags(1)
 gvRun = prebasFlags(2)
@@ -168,10 +176,17 @@ else
  multiOut(:,1,4,:,1) = initVar(:,1,:) !initialize species
 endif
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!! STARTING YEAR LOOP !!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 do ij = startSimYear,maxYears
     ! open(1,file="test1.txt")
   ! write(1,*) ij, "start"
   ! close(1)
+
+
+! After each site i:! print *, 'Y=', ij, 'i=', i, 'roundWood=', roundWood, 'totharv_cc=', totharv_cc, &!          'CC_occ=', (sum(output(1,11,1:jj,1)) == 0.d0), 'ClCutX=', ClCutX, 'cutA=', cuttingArea(ij,2)
 
   !initialize annual harvest
  roundWood = 0.
@@ -198,7 +213,6 @@ do ij = startSimYear,maxYears
  if(HarvLim(ij,1)>0. .and. HarvLim(ij,1)<10.) then
   if(ij==1) then
    HarvLim(ij,1) = 0.
-
    HarvLim(ij,2) = 0.
   else
    year_smooth_cut_start = max(ij-n_years_smooth_cut,1)
@@ -216,6 +230,13 @@ do ij = startSimYear,maxYears
   endif
  endif
 
+
+ ! =====================[ DEBUG ]=====================+
+ ! Year-start diagnostic: show cap and CC target for the year+
+ ! (Remove or comment out when no longer needed)+
+   write(*,'(A,I5,2(A,F14.3))') 'Y=', ij, ' HarvLim=', HarvLim(ij,1), &
+        ' CC_target=', HarvLim(ij,1)*cclimiter
+! ===================================================
 
  ! counting last year's salvage logging from sites where tapio harvests were already stopped due to the harvest limit being met
  ! towards current years roundwood aggregate. !salvnext
@@ -619,6 +640,19 @@ endif
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
     totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
   endif
+
+   ! =====================[ DEBUG ]=====================+
+   ! Per-site diagnostic: show accumulators and whether this site clearcut.+
+   ! Use the same jj you computed for oldLayer-aware logic above.+
+   cc_occ = (sum(output(1,13,1:jj,1)) == 0.d0) .AND. (sum(output(1,37,1:jj,1)) > 0.d0)
+   write(*,'(A,I5,A,I6,2(A,F14.3),A,L1,2(A,F14.3))') &
+   'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
+        ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
+  ! ===================================================
+
+
+
+
  end do !iz i site loop
 
  !!! check if the harvest limit of the area has been reached otherwise clearcut the stands sorted by DBH
