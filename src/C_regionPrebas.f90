@@ -654,7 +654,7 @@ endif
    ! Per-site diagnostic: show accumulators and whether this site clearcut.+
    ! Use the same jj you computed for oldLayer-aware logic above.+
    cc_occ = (sum(output(1,13,1:jj,1)) == 0.d0) .AND. (sum(output(1,37,1:jj,1)) > 0.d0)
-   rite(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
+   write(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
         'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
              ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
   ! ===================================================
@@ -1294,7 +1294,7 @@ soilCtotInOut = soilCtot
     ! open(1,file="test1.txt")
   ! write(1,*) i,ij,ijj,nSites, "end"
 !  if(disturbanceON) close(1) !to write wdistdev output
-+! =====================[ DEBUG ]=====================+
+! =====================[ DEBUG ]=====================+
 ! Close the debug file when leaving the subroutine (ensure one exit path).+
 close(dbgUnit)
 ! ===================================================
