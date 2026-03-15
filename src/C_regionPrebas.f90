@@ -94,19 +94,19 @@ real (kind=8) :: minFapar,fAparFactor=0.9
 
 ! =====================[ DEBUG ]=====================+
 ! Debug logging: file unit and helpers+
-integer, parameter :: dbgUnit = 99
-character(len=*), parameter :: dbgFile = 'regionprebas_debug.log'
+!integer, parameter :: dbgUnit = 99
+!character(len=*), parameter :: dbgFile = 'regionprebas_debug.log'
  logical :: cc_occ
  ! ===================================================
 
  ! =====================[ DEBUG ]=====================+
  ! Open (or create) the debug log once. Using STATUS='UNKNOWN' allows both create/append semantics across compilers.+
  ! ACTION='WRITE' suffices, but READWRITE is also fine; RECL not required as we use formatted records.+
- open(unit=dbgUnit, file=dbgFile, status='unknown', position='append', action='write')
-  write(dbgUnit,'(A)') '--- regionPrebas debug session start ---'
-   write(dbgUnit,'(A)') 'nSites='//trim(adjustl( &
-      transfer(nSites,'          ') ))//' maxYears='//trim(adjustl(transfer(maxYears,'          ')))
-       ! ===================================================
+ ! open(unit=dbgUnit, file=dbgFile, status='unknown', position='append', action='write')
+ !  write(dbgUnit,'(A)') '--- regionPrebas debug session start ---'
+ !   write(dbgUnit,'(A)') 'nSites='//trim(adjustl( &
+ !      transfer(nSites,'          ') ))//' maxYears='//trim(adjustl(transfer(maxYears,'          ')))
+ !       ! ===================================================
 
 !!! 'un-vectorise' flags, fvec
 etmodel = prebasFlags(1)
@@ -243,9 +243,9 @@ do ij = startSimYear,maxYears
  ! =====================[ DEBUG ]=====================+
  ! Year-start diagnostic: show cap and CC target for the year+
  ! (Remove or comment out when no longer needed)+
-  write(dbgUnit,'(A,I5,2(A,F14.3))') 'Y=', ij, ' HarvLim=', HarvLim(ij,1), &
-      ' CC_target=', HarvLim(ij,1)*cclimiter
-! ===================================================
+!   write(dbgUnit,'(A,I5,2(A,F14.3))') 'Y=', ij, ' HarvLim=', HarvLim(ij,1), &
+!       ' CC_target=', HarvLim(ij,1)*cclimiter
+! ! ===================================================
 
  ! counting last year's salvage logging from sites where tapio harvests were already stopped due to the harvest limit being met
  ! towards current years roundwood aggregate. !salvnext
@@ -637,10 +637,8 @@ endif
   initVar(i,7,1:nLayers(i)) = output(1,16,1:nLayers(i),1)
 
 
-  ! =====================[ DEBUG ]=====================+
-  ! Per-site diagnostic: show accumulators and whether this site clearcut.+
+
   cc_occ = (sum(output(1,13,1:nLayers(i),1)) == 0.d0) .AND. (sum(output(1,37,1:nLayers(i),1)) > 0.d0)
-! debug pt 1
 
 
 
@@ -659,12 +657,12 @@ endif
     endif
   endif
 
-!debug pt 2
-  write(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
-       'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
-            ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
- ! ===================================================
-
+ !  ! =====================[ DEBUG ]=====================+
+ !  ! Per-site diagnostic: show accumulators and whether this site clearcut.+  write(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
+ !       'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
+ !            ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
+ ! ! ===================================================
+ !
 
 
  end do !iz i site loop
@@ -1301,7 +1299,7 @@ soilCtotInOut = soilCtot
 !  if(disturbanceON) close(1) !to write wdistdev output
 ! =====================[ DEBUG ]=====================+
 ! Close the debug file when leaving the subroutine (ensure one exit path).+
-close(dbgUnit)
+!close(dbgUnit)
 ! ===================================================
 end subroutine
 
