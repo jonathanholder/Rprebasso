@@ -637,6 +637,13 @@ endif
   initVar(i,7,1:nLayers(i)) = output(1,16,1:nLayers(i),1)
 
 
+  ! =====================[ DEBUG ]=====================+
+  ! Per-site diagnostic: show accumulators and whether this site clearcut.+
+  cc_occ = (sum(output(1,13,1:nLayers(i),1)) == 0.d0) .AND. (sum(output(1,37,1:nLayers(i),1)) > 0.d0)
+! debug pt 1
+
+
+
 
 
   ! initVar(i,8,1:nLayers(i)) = output(1,2,1:nLayers(i),1)  !!newX
@@ -652,15 +659,11 @@ endif
     endif
   endif
 
-   ! =====================[ DEBUG ]=====================+
-   ! Per-site diagnostic: show accumulators and whether this site clearcut.+
-   ! Use the same jj you computed for oldLayer-aware logic above.+
-   cc_occ = (sum(output(1,13,1:jj,1)) == 0.d0) .AND. (sum(output(1,37,1:jj,1)) > 0.d0)
-   write(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
-        'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
-             ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
-  ! ===================================================
-
+!debug pt 2
+  write(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
+       'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
+            ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
+ ! ===================================================
 
 
 
