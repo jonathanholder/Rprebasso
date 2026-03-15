@@ -647,7 +647,7 @@ endif
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
-    if(cc_occ == .TRUE. ) then
+    if(cc_occ .eqv. .TRUE. ) then
       totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
     endif
   endif
