@@ -647,7 +647,9 @@ endif
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
-    totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
+    if(cc_occ==TRUE) then
+      totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
+    endif
   endif
 
    ! =====================[ DEBUG ]=====================+
@@ -737,7 +739,7 @@ endif
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
      roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !!energCuts
-     totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
+     !totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
      multiOut(siteX,ij,37,:,1) = multiOut(siteX,ij,37,1:jj,1) + &
       multiOut(siteX,ij,30,1:jj,1)*harvRatio
      multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
@@ -1010,7 +1012,7 @@ endif
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
      roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !!energCuts
-     totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
+     !totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
      multiOut(siteX,ij,37,:,1) = multiOut(siteX,ij,37,1:jj,1) + &
       multiOut(siteX,ij,30,1:jj,1)*harvRatio
      multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
