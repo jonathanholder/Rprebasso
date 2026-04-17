@@ -43,7 +43,7 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5),minDharv,ageM
  real (kind=8), intent(inout):: siteInfoDist(nSites,10), outDist(nSites,maxYears,10) !inputs(siteInfoDist) & outputs(outDist) of disturbance modules
  !integer :: siteOrderX(nSites) ! for site order prio due to disturbance
 
-real (kind=8) :: cclimiter, totharv_cc !cclim
+real (kind=8) :: cclimiter, totharv_cc !clearcut limiter: share of harvested V allowed from clearcuts, 0-1. totharv_cc: accumulator for volume retrieved from clearcuts
 !cuttingArea columns are clcutA target(1) simuation(2);tending target(3), sim(4);firstThin targ(5) sim(6)
  real (kind=8), intent(inout) :: compHarv(2),cuttingArea(maxYears,6)
  real (kind=8), intent(in) :: tapioPars(5,2,3,20),thdPer(nSites),limPer(nSites)
@@ -92,22 +92,11 @@ real (kind=8) :: minFapar,fAparFactor=0.9
  integer, intent(inout) :: prebasFlags(10)
 
 
-! =====================[ DEBUG ]=====================+
-! Debug logging: file unit and helpers+
-!integer, parameter :: dbgUnit = 99
-!character(len=*), parameter :: dbgFile = 'regionprebas_debug.log'
- logical :: cc_occ
+
+ logical :: cc_occ ! clearcut?
  ! ===================================================
 
- ! =====================[ DEBUG ]=====================+
- ! Open (or create) the debug log once. Using STATUS='UNKNOWN' allows both create/append semantics across compilers.+
- ! ACTION='WRITE' suffices, but READWRITE is also fine; RECL not required as we use formatted records.+
- ! open(unit=dbgUnit, file=dbgFile, status='unknown', position='append', action='write')
- !  write(dbgUnit,'(A)') '--- regionPrebas debug session start ---'
- !   write(dbgUnit,'(A)') 'nSites='//trim(adjustl( &
- !      transfer(nSites,'          ') ))//' maxYears='//trim(adjustl(transfer(maxYears,'          ')))
- !       ! ===================================================
-
+ !
 !!! 'un-vectorise' flags, fvec
 etmodel = prebasFlags(1)
 gvRun = prebasFlags(2)
@@ -195,7 +184,6 @@ do ij = startSimYear,maxYears
   ! close(1)
 
 
-! After each site i:! print *, 'Y=', ij, 'i=', i, 'roundWood=', roundWood, 'totharv_cc=', totharv_cc, &!          'CC_occ=', (sum(output(1,11,1:jj,1)) == 0.d0), 'ClCutX=', ClCutX, 'cutA=', cuttingArea(ij,2)
 
   !initialize annual harvest
  roundWood = 0.
@@ -238,14 +226,6 @@ do ij = startSimYear,maxYears
    energy_flag = 1.
   endif
  endif
-
-
- ! =====================[ DEBUG ]=====================+
- ! Year-start diagnostic: show cap and CC target for the year+
- ! (Remove or comment out when no longer needed)+
-!   write(dbgUnit,'(A,I5,2(A,F14.3))') 'Y=', ij, ' HarvLim=', HarvLim(ij,1), &
-!       ' CC_target=', HarvLim(ij,1)*cclimiter
-! ! ===================================================
 
  ! counting last year's salvage logging from sites where tapio harvests were already stopped due to the harvest limit being met
  ! towards current years roundwood aggregate. !salvnext
@@ -378,22 +358,18 @@ endif
   if ((cuttingArea(ij,1) > 0. .and. cuttingArea(ij,2) > cuttingArea(ij,1)) .or. (cuttingArea(ij,1) < -1000.)) then !!!swithch off clear cuts if threshold area (cuttingArea(1)), has been reached
    ClCutX = 0.
   endif
-  ! if (totharv_cc > (HarvLim(ij,1)*cclimiter)) then !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
-  !      ClCutX = 0.
-  !      outDist(i, ij, 1) = 353. !cclim indicate triggering
-  !
-  ! endif
+
   if (HarvLim(ij,1) > 0.) then !!! safeguard for HarvLim=0
       if (totharv_cc > HarvLim(ij,1) * cclimiter) then    !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
           ClCutX = 0.
-          outDist(i, ij, 1) = 353.
+          !outDist(i, ij, 1) = 353. !debugging
       endif
   endif
 
   if (HarvLim(ij,1) > 0. .and. roundWood >= HarvLim(ij,1)) then
    ClCutX = 0.
    defaultThinX = 0.
-   outDist(i, ij, 1) = 361. !cclim indicate triggering
+  ! outDist(i, ij, 1) = 361. !debugging: cclim indicate triggering
 
   endif
   if (HarvLim(ij,2) > 0. .and.  energyWood >= HarvLim(ij,2)) then    !!energCuts
@@ -540,8 +516,8 @@ endif
   endif
 
   !! BUGFIXING CCLIMITER
-    output(1,37,:,:)=0.
-    outDist(i, ij, 10) = totharv_cc
+    !output(1,37,:,:)=0.
+    !outDist(i, ij, 10) = totharv_cc
 !!/ BUGFIXING CCLIMITER
 
     call prebas(1,nLayers(i),allSP,siteInfo(i,:),pCrobas,initVar(i,:,1:nLayers(i)),&
@@ -638,7 +614,7 @@ endif
 
 
 
-  cc_occ = (sum(output(1,13,1:nLayers(i),1)) == 0.d0) .AND. (sum(output(1,37,1:nLayers(i),1)) > 0.d0)
+  cc_occ = (sum(output(1,13,1:nLayers(i),1)) == 0.d0) .AND. (sum(output(1,37,1:nLayers(i),1)) > 0.d0) !clearcut indicator
 
 
 
@@ -657,12 +633,6 @@ endif
     endif
   endif
 
- !  ! =====================[ DEBUG ]=====================+
- !  ! Per-site diagnostic: show accumulators and whether this site clearcut.+  write(dbgUnit,'(A,I5,A,I8,2(A,F16.4),A,L1,2(A,F16.4))') &
- !       'Y=', ij, ' i=', i, ' roundWood=', roundWood, ' totharv_cc=', totharv_cc, &
- !            ' CC_occ=', cc_occ, ' ClCutX=', ClCutX, ' CC_area_so_far=', cuttingArea(ij,2)
- ! ! ===================================================
- !
 
 
  end do !iz i site loop
@@ -1013,7 +983,6 @@ endif
 !!   !!clearcut!!
    cuttingArea(ij,2) = cuttingArea(ij,2) + areas(siteX) !calculate the clearcut area
      roundWood = roundWood + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !!energCuts
-     !totharv_cc = totharv_cc + sum(multiOut(siteX,ij,30,1:jj,1)*harvRatio)*areas(siteX) !cclim accumulate v collected in V
      multiOut(siteX,ij,37,:,1) = multiOut(siteX,ij,37,1:jj,1) + &
       multiOut(siteX,ij,30,1:jj,1)*harvRatio
      multiOut(siteX,ij,38,:,1) = multiOut(siteX,ij,38,1:jj,1) + &
@@ -1297,10 +1266,7 @@ soilCtotInOut = soilCtot
     ! open(1,file="test1.txt")
   ! write(1,*) i,ij,ijj,nSites, "end"
 !  if(disturbanceON) close(1) !to write wdistdev output
-! =====================[ DEBUG ]=====================+
-! Close the debug file when leaving the subroutine (ensure one exit path).+
-!close(dbgUnit)
-! ===================================================
+
 end subroutine
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -952,7 +952,7 @@ multiPrebas <- function(multiSiteInit,
 #' @param minDharv 
 #' @param cutAreas 
 #' @param compHarv 
-#' @param clcutlimiter max share of harvested volume from clear cuts (range 0:1). Remainder towards harvLim is then filled by thinnings. Length either 1 or maxYears. 
+#' @param clcutlimiter max share of harvested volume from clear cuts (range 0:1). Remainder towards harvLim needs to be filled by thinnings. Length either 1 or maxYears. Note: internally superseedes cutarea limit for clearcuts. 
 #' @param thinFact 
 #' @param ageHarvPrior 
 #' @param siteOrder 
@@ -1027,7 +1027,7 @@ regionPrebas <- function(multiSiteInit,
   
   if(all(!is.na(clcutlimiter))){ # if clcutlimiter is given as input, replace clearcut area limits with it (less objects passed to fortran, would be in conflict anyway)
     warning("clcutlimiter input given, superseedes cutArea limits for clearcuts!")
-    if(length(clcutlimiter) > 1 & length(clcutlimiter)<multiSiteInit$maxYears) stop("clcutlimiter neither of length 1 nor n years")
+    if(length(clcutlimiter) != 1 & length(clcutlimiter) != multiSiteInit$maxYears) stop("clcutlimiter neither of length 1 nor N years")
     if(length(clcutlimiter) == 1) clcutlimiter <- rep(clcutlimiter, multiSiteInit$maxYears)
     cutAreas[,1] <- clcutlimiter
   } 
