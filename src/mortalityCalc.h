@@ -1,7 +1,7 @@
 !Reineke mortality model
   STAND_all(42,:) = 0.
 
-if (mortMod==1. .or. mortMod==3.) then
+  if (mortMod==1. .or. mortMod==3. .or. mortMod==4. .or. mortMod==5.) then
    do ij = 1 , nLayers     !loop Species
      dN=0.d0
 
@@ -109,11 +109,16 @@ if (mortMod==1. .or. mortMod==3.) then
      if(.true.) then
       Rein = Reineke(ij) / par_kRein
 
-      if(Rein > 1.) then
-         dN = - 0.02 * N * Rein
-      else
-         dN = 0.
-      endif
+      if(mortMod==1. .or. mortMod==3.) then !new reineke version on its own = 1, new & siipilehto = 3
+  dN = - 0.02 * N * Rein**5.
+  else !implicitely 4 (old) or  5 (old + sl)
+
+        if(Rein > 1.) then
+           dN = - 0.02 * N * Rein
+        else
+           dN = 0.
+        endif
+  endif
       if(mort == 0.) then
       dN = min(dN,-(0.03*N)) !!!!reduce try density of 3% if there is no growth
 !      mort = 0.
@@ -208,7 +213,7 @@ endif
 
 !!!!!empirical Mortality model (siilipehto et al. 2020)
 ! if(.FALSE.) then
-if(mortMod==2. .or. mortMod==3.) then
+if(mortMod==2. .or. mortMod==3. .or. mortMod==5.) then
 
   if(mortMod==2.) then
 !  STAND_all(26,:) = 0.
