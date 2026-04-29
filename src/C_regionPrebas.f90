@@ -26,6 +26,8 @@ real (kind=8), intent(in) :: weatherPRELES(nClimID,maxYears,365,5),minDharv,ageM
  real (kind=8), intent(in) :: pPRELES(30),pCrobas(npar,allSP),pECMmod(12)
 !cuttingArea columns are clcutA target(1) simuation(2);tending target(3), sim(4);firstThin targ(5) sim(6)
  real (kind=8), intent(inout) :: compHarv(2),cuttingArea(maxYears,6)
+ real (kind=8) :: cclimiter, totharv_cc !clearcut limiter: share of harvested V allowed from clearcuts, 0-1. totharv_cc: accumulator for volume retrieved from clearcuts
+ logical :: cc_occ ! clearcut?
  real (kind=8), intent(in) :: tapioPars(5,2,3,20),thdPer(nSites),limPer(nSites)
  real (kind=8), intent(inout) :: tTapio(5,allSP,2,7), ftTapio(5,allSP,3,7),mortMod(2), latitude(nSites),P00CN(nSites)
  real (kind=8), intent(inout) :: TsumSBBs(nSites,4)
@@ -156,6 +158,15 @@ do ij = startSimYear,maxYears
   !initialize annual harvest
  roundWood = 0.
  energyWood = 0.  !!energCuts
+
+ !cclimiter: limit share of harvested V obtained from clearcuts. input from cuttingArea[,1], converted from -1:-0.00001 to 0.00001:1. 1= no limitations, 0.8 = 80% of harvested V can be obtained from ccs.
+  totharv_cc = 0.!cclim
+  cclimiter = 1. !cclim cclimiter inactive by default. retrieve from cuttingArea[1,] if in range -1:-0.000001 within year loop
+  if(cuttingArea(ij, 1) > 0.01 .AND. cuttingArea(ij, 1) < 1.01) then !retrieve from cuttingArea[1,] if in range -1:-0.000001
+    cclimiter = cuttingArea(ij, 1)
+    cuttingArea(ij, 1) = -999.5
+  endif
+
  ! if Harvlim is between 0 and 10 calculates the Harvest limit as % of net growth
  if(HarvLim(ij,1)>0. .and. HarvLim(ij,1)<10.) then
   if(ij==1) then
@@ -166,7 +177,7 @@ do ij = startSimYear,maxYears
    n_years_smooth_cut_actual = min(n_years_smooth_cut,(ij-1))
      do i = 1,nSites
 	  if(defaultThin(i)>0. .or. ClCut(i)>0.) then
-		siteHarv(i) = areas(i) * sum(multiOut(i,year_smooth_cut_start:(ij-1),43,:,1) / n_years_smooth_cut_actual
+		siteHarv(i) = areas(i) * sum(multiOut(i,year_smooth_cut_start:(ij-1),43,:,1)) / n_years_smooth_cut_actual
 	  else
 		siteHarv(i)=0.
       endif
@@ -278,6 +289,16 @@ endif
     if (cuttingArea(ij,1) > 0. .and. cuttingArea(ij,2) > cuttingArea(ij,1)) then !!!swithch off clear cuts if threshold area (cuttingArea(1)), has been reached
    ClCutX = 0.
   endif
+
+!! CClimiter checking
+  if (HarvLim(ij,1) > 0.) then !!! safeguard for HarvLim=0
+       if (totharv_cc > HarvLim(ij,1) * cclimiter) then    !!!switch off clear cuts if v harvested in clear cuts exceeds cclimiter share
+           ClCutX = 0.
+           !outDist(i, ij, 1) = 353. !debugging
+       endif
+   endif
+
+
   if (HarvLim(ij,1) > 0. .and. roundWood >= HarvLim(ij,1)) then
    ClCutX = 0.
    defaultThinX = 0.
@@ -492,12 +513,20 @@ endif
   initVar(i,3:6,1:nLayers(i)) = output(1,11:14,1:nLayers(i),1)
   initVar(i,7,1:nLayers(i)) = output(1,16,1:nLayers(i),1)
   ! initVar(i,8,1:nLayers(i)) = output(1,2,1:nLayers(i),1)  !!newX
+
+  cc_occ = (sum(output(1,13,1:nLayers(i),1)) == 0.d0) .AND. (sum(output(1,37,1:nLayers(i),1)) > 0.d0) !clearcut indicator
+
   if(isnan(sum(output(1,37,1:nLayers(i),1)))) then
     roundWood = roundWood
     energyWood = energyWood
+    totharv_cc = totharv_cc
+
   else
     roundWood = roundWood + sum(output(1,37,1:nLayers(i),1))* areas(i)
     energyWood = energyWood + sum(wood(1,1:nLayers(i),1))* areas(i)   !!energCuts !!!we are looking at volumes
+    if(cc_occ .eqv. .TRUE. ) then
+     totharv_cc = totharv_cc + sum(output(1,37,1:nLayers(i),1))* areas(i) !cclim accumulate v collected in V
+    endif
   endif
  end do !iz i site loop
 
